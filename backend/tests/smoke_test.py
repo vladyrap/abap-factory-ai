@@ -205,6 +205,9 @@ r = c.post("/api/migration/migrate", headers=cons_h, json={"source_code": "REPOR
 check("migración sin key 503", r.status_code == 503)
 r = c.post("/api/dev-docs/generate", headers=cons_h, json={"description": "x", "sap_context": {"sap_version": "S4HANA"}, "save": False})
 check("dev-doc sin key 503", r.status_code == 503)
+r = c.post("/api/solution/build", headers=cons_h, json={"requirement_text": "Necesito un report ALV de facturas FI", "save": False})
+check("solution/build sin key 503", r.status_code == 503)
+check("SOLUTION_TYPES definidos", len(__import__("app.services.ai.solution", fromlist=["SOLUTION_TYPES"]).SOLUTION_TYPES) == 6)
 
 print(f"\n==== RESULTADO: {PASS} PASS / {FAIL} FAIL ====")
 raise SystemExit(1 if FAIL else 0)

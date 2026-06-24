@@ -9,6 +9,7 @@ import ErrorBoundary from './components/ErrorBoundary'
 import LoginPage from './pages/auth/LoginPage'
 import Dashboard from './pages/Dashboard'
 import WizardPage from './pages/wizard/WizardPage'
+import SolutionPage from './pages/solution/SolutionPage'
 import ProjectsPage from './pages/projects/ProjectsPage'
 import KnowledgePage from './pages/knowledge/KnowledgePage'
 import GeneratorPage from './pages/generator/GeneratorPage'
@@ -43,6 +44,7 @@ export default function App() {
         <Route path="/" element={<Protected><ProjectProvider><AppLayout /></ProjectProvider></Protected>}>
           <Route index element={<Dashboard />} />
           <Route path="wizard" element={<WizardPage />} />
+          <Route path="solution" element={<SolutionPage />} />
           <Route path="projects" element={<ProjectsPage />} />
           <Route path="knowledge" element={<KnowledgePage />} />
           <Route path="generator" element={<GeneratorPage />} />

@@ -33,6 +33,19 @@ Plataforma web para **generar, analizar, corregir, documentar y probar código A
 | `inspector` | Code Inspector / ATC | calidad, seguridad, performance, clean code |
 | `qa_abap` | QA ABAP | ABAP Unit, pruebas funcionales/regresión/integración |
 
+## Requerimiento → Solución (orquestador)
+
+Pega o **sube** un requerimiento funcional (correo, acta, spec) y el sistema **clasifica**
+qué se necesita y lo **resuelve de punta a punta**:
+- `nuevo_desarrollo` → genera el programa/objeto (código + explicación + calidad).
+- `correccion_bug` / `mejora_enhancement` / `ajuste` → aplica el cambio sobre el código existente
+  (pegado), con diff de cambios.
+- `fix_dump` → analiza el dump y entrega el código corregido.
+- `migracion` → migra el código existente a S/4HANA / ABAP Cloud.
+
+Devuelve el tipo detectado, el plan, el código, la explicación, los cambios y las notas de
+confianza; guarda el resultado como artefacto versionable del proyecto. Endpoint `/solution/build`.
+
 ## Migración, calidad y documentación
 
 - **Migración ECC → S/4HANA / ABAP Cloud**: pega código ECC y obtén la versión modernizada,

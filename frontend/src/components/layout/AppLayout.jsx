@@ -4,7 +4,7 @@ import { motion } from 'framer-motion'
 import {
   LayoutDashboard, FolderKanban, Wand2, Code2, Bug, ShieldCheck, Workflow, Brain,
   FlaskConical, ClipboardList, History, DollarSign, Users, Bot, LogOut, Cpu, FileText,
-  ArrowRightLeft, Tags, FileStack, GitBranch,
+  ArrowRightLeft, Tags, FileStack, GitBranch, Sparkles,
 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { useProject } from '../../context/ProjectContext'
@@ -13,6 +13,7 @@ import ErrorBoundary from '../ErrorBoundary'
 
 const NAV = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
+  { to: '/solution', label: 'Requerimiento → Solución', icon: Sparkles, perm: 'create' },
   { to: '/wizard', label: 'Flujo guiado', icon: Workflow, perm: 'create' },
   { to: '/projects', label: 'Proyectos', icon: FolderKanban, perm: 'projects' },
   { to: '/knowledge', label: 'Memoria cliente', icon: Brain, perm: 'create' },

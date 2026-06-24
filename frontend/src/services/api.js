@@ -114,6 +114,10 @@ export const connectionsApi = {
   set: (projectId, data) => api.put(`/connections/project/${projectId}`, data),
 }
 
+export const solutionApi = {
+  build: (data) => api.post('/solution/build', data),
+}
+
 export const knowledgeApi = {
   list: (clientId) => api.get(`/knowledge/client/${clientId}`),
   add: (data) => api.post('/knowledge/', data),

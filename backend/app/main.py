@@ -8,7 +8,7 @@ import app.models  # noqa: F401 — registra todos los modelos en Base.metadata
 from app.api.routes import (
     auth, admin, clients, projects, catalog, generation, dumps, inspector,
     tests, dashboard, costs, agents, exports, jobs, recipes, knowledge,
-    migration, naming, dev_docs, connections,
+    migration, naming, dev_docs, connections, solution,
 )
 
 setup_logging()
@@ -47,7 +47,7 @@ register_errors(app)
 
 for r in (auth, admin, clients, projects, catalog, generation, dumps, inspector,
           tests, dashboard, costs, agents, exports, jobs, recipes, knowledge,
-          migration, naming, dev_docs, connections):
+          migration, naming, dev_docs, connections, solution):
     app.include_router(r.router, prefix=settings.API_PREFIX)
 
 

@@ -153,6 +153,16 @@ class NamingPreviewRequest(BaseModel):
     variables: dict = {}
 
 
+# ─── Orquestador: Requerimiento → Solución ───────────────────────────────────
+class SolutionRequest(BaseModel):
+    requirement_text: str = BigText
+    existing_code: Optional[str] = Field(None, max_length=_MAX)  # para fix/migración/ajuste o dump
+    sap_context: Optional[SapContext] = None
+    project_id: Optional[int] = None
+    client_id: Optional[int] = None
+    save: bool = True
+
+
 # ─── Conexión SAP / abapGit ──────────────────────────────────────────────────
 class SapConnectionUpdate(BaseModel):
     kind: str = "abapgit"
