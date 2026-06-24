@@ -1,7 +1,13 @@
 """Schemas de los módulos de IA: requerimientos, generación, dumps, inspección, tests, editor."""
 from datetime import datetime
 from typing import Optional, Any
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+from app.core.config import settings
+
+_MAX = settings.MAX_INPUT_CHARS
+
+# Campo de texto grande (código/dump/texto libre) con tope de tamaño.
+BigText = Field(..., max_length=_MAX)
 
 
 # ─── Contexto SAP (selector) ─────────────────────────────────────────────────
@@ -54,7 +60,7 @@ class RequirementResponse(BaseModel):
 
 # ─── Generación de código ────────────────────────────────────────────────────
 class GenerateRequest(BaseModel):
-    description: str
+    description: str = BigText
     sap_context: SapContext
     project_id: Optional[int] = None
     requirement_id: Optional[int] = None
@@ -102,7 +108,7 @@ class GenerateResponse(BaseModel):
 
 
 class ValidateRequest(BaseModel):
-    source_code: str
+    source_code: str = BigText
 
 
 class RefineRequest(BaseModel):
@@ -111,13 +117,13 @@ class RefineRequest(BaseModel):
 
 
 class ExtractRequest(BaseModel):
-    raw_text: str
+    raw_text: str = BigText
     project_id: Optional[int] = None
 
 
 # ─── Migración ECC → S/4 / Cloud ─────────────────────────────────────────────
 class MigrateRequest(BaseModel):
-    source_code: str
+    source_code: str = BigText
     target: str = "S4HANA"      # S4HANA | S4HANA_CLOUD_PUBLIC | BTP_ABAP
     project_id: Optional[int] = None
     save: bool = True
@@ -125,7 +131,7 @@ class MigrateRequest(BaseModel):
 
 # ─── Documento técnico (objeto por objeto + paso a paso) ─────────────────────
 class DevDocRequest(BaseModel):
-    description: str
+    description: str = BigText
     sap_context: SapContext
     project_id: Optional[int] = None
     requirement_id: Optional[int] = None
@@ -175,7 +181,7 @@ class SpecRequest(BaseModel):
 
 # ─── Dumps ───────────────────────────────────────────────────────────────────
 class DumpRequest(BaseModel):
-    raw_dump: str
+    raw_dump: str = BigText
     project_id: Optional[int] = None
     sap_context: Optional[SapContext] = None
     save: bool = True
@@ -202,7 +208,7 @@ class DumpResponse(BaseModel):
 
 # ─── Code Inspector ──────────────────────────────────────────────────────────
 class InspectRequest(BaseModel):
-    source_code: str
+    source_code: str = BigText
     sap_context: Optional[SapContext] = None
     project_id: Optional[int] = None
     code_artifact_id: Optional[int] = None
@@ -211,7 +217,7 @@ class InspectRequest(BaseModel):
 
 # ─── Tests ───────────────────────────────────────────────────────────────────
 class UnitTestRequest(BaseModel):
-    source_code: str
+    source_code: str = BigText
     sap_context: Optional[SapContext] = None
     project_id: Optional[int] = None
     code_artifact_id: Optional[int] = None
@@ -231,7 +237,7 @@ class ProtocolRequest(BaseModel):
 # ─── Editor ──────────────────────────────────────────────────────────────────
 class EditorRequest(BaseModel):
     operation: str  # explain | refactor | to_oo | ecc_to_s4 | cleanup
-    source_code: str
+    source_code: str = BigText
     project_id: Optional[int] = None
 
 

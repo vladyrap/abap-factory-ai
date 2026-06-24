@@ -8,11 +8,39 @@ from __future__ import annotations
 import time
 import logging
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, Callable
 
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)
+
+# Subcadenas de tipos de error que SÍ vale la pena reintentar (transitorios).
+_RETRYABLE = ("ratelimit", "timeout", "connection", "overloaded", "serviceunavailable",
+              "apiconnection", "internalserver", "502", "503", "504")
+
+
+def _is_retryable(exc: Exception) -> bool:
+    name = (type(exc).__name__ + " " + str(exc)).lower()
+    return any(tok in name for tok in _RETRYABLE)
+
+
+def _with_retries(fn: Callable, label: str):
+    """Ejecuta fn con reintentos y backoff exponencial ante errores transitorios."""
+    attempts = settings.AI_MAX_RETRIES + 1
+    delay = 1.0
+    last = None
+    for i in range(attempts):
+        try:
+            return fn()
+        except Exception as exc:  # noqa: BLE001
+            last = exc
+            if i < attempts - 1 and _is_retryable(exc):
+                logger.warning("ai.retry", extra={"provider": label, "attempt": i + 1, "error": str(exc)[:200]})
+                time.sleep(delay)
+                delay *= 2
+                continue
+            raise
+    raise last
 
 
 @dataclass
@@ -51,15 +79,16 @@ class ClaudeProvider(LLMProvider):
     def complete(self, system, user_prompt, model=None, temperature=0.2, max_tokens=4000) -> LLMResult:
         import anthropic  # import perezoso: solo si se usa
         model = model or settings.CLAUDE_DEFAULT_MODEL
-        client = anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY)
+        client = anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY,
+                                     timeout=settings.AI_TIMEOUT_SECONDS)
         t0 = time.time()
-        resp = client.messages.create(
+        resp = _with_retries(lambda: client.messages.create(
             model=model,
             system=system,
             max_tokens=max_tokens,
             temperature=temperature,
             messages=[{"role": "user", "content": user_prompt}],
-        )
+        ), label="claude")
         latency = int((time.time() - t0) * 1000)
         text = "".join(block.text for block in resp.content if getattr(block, "type", None) == "text")
         return LLMResult(
@@ -81,9 +110,9 @@ class OpenAIProvider(LLMProvider):
     def complete(self, system, user_prompt, model=None, temperature=0.2, max_tokens=4000) -> LLMResult:
         from openai import OpenAI  # import perezoso
         model = model or settings.OPENAI_DEFAULT_MODEL
-        client = OpenAI(api_key=settings.OPENAI_API_KEY)
+        client = OpenAI(api_key=settings.OPENAI_API_KEY, timeout=settings.AI_TIMEOUT_SECONDS)
         t0 = time.time()
-        resp = client.chat.completions.create(
+        resp = _with_retries(lambda: client.chat.completions.create(
             model=model,
             temperature=temperature,
             max_tokens=max_tokens,
@@ -91,7 +120,7 @@ class OpenAIProvider(LLMProvider):
                 {"role": "system", "content": system},
                 {"role": "user", "content": user_prompt},
             ],
-        )
+        ), label="openai")
         latency = int((time.time() - t0) * 1000)
         text = resp.choices[0].message.content or ""
         usage = resp.usage

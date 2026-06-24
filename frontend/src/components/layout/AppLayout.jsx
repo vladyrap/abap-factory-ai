@@ -9,6 +9,7 @@ import {
 import { useAuth } from '../../context/AuthContext'
 import { useProject } from '../../context/ProjectContext'
 import TechBackground from '../TechBackground'
+import ErrorBoundary from '../ErrorBoundary'
 
 const NAV = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
@@ -125,7 +126,9 @@ export default function AppLayout() {
           initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.28 }}
           className="flex-1 overflow-auto p-6"
         >
-          <Outlet />
+          <ErrorBoundary key={location.pathname}>
+            <Outlet />
+          </ErrorBoundary>
         </motion.main>
       </div>
     </div>

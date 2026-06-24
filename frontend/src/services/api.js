@@ -1,6 +1,7 @@
 import axios from 'axios'
+import toast from 'react-hot-toast'
 
-const api = axios.create({ baseURL: '/api' })
+const api = axios.create({ baseURL: '/api', timeout: 120000 })
 
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token')
@@ -8,13 +9,31 @@ api.interceptors.request.use((config) => {
   return config
 })
 
+// Evita repetir el mismo toast varias veces en ráfaga.
+let _lastToast = 0
+function notifyOnce(msg) {
+  const now = Date.now()
+  if (now - _lastToast > 1500) { toast.error(msg); _lastToast = now }
+}
+
 api.interceptors.response.use(
   (r) => r,
   (err) => {
-    if (err.response?.status === 401) {
+    const status = err.response?.status
+    if (status === 401) {
       localStorage.removeItem('token')
       localStorage.removeItem('user')
-      window.location.href = '/login'
+      if (!location.pathname.startsWith('/login')) window.location.href = '/login'
+    } else if (status === 429) {
+      notifyOnce(err.response?.data?.detail || 'Límite de uso alcanzado. Intenta más tarde.')
+    } else if (status === 503) {
+      // Servicio IA no configurado/temporal: lo maneja cada pantalla; no spamear toast global.
+    } else if (status >= 500) {
+      notifyOnce('Error del servidor. El equipo fue notificado.')
+    } else if (err.code === 'ECONNABORTED') {
+      notifyOnce('La solicitud tardó demasiado. Reintenta.')
+    } else if (!err.response) {
+      notifyOnce('Sin conexión con el servidor.')
     }
     return Promise.reject(err)
   }

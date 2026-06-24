@@ -13,6 +13,13 @@ from app.api.routes import (
 
 setup_logging()
 
+import logging
+_log = logging.getLogger("abapfactory")
+
+# Endurecimiento: no arrancar en producción con la SECRET_KEY por defecto.
+if settings.ENV == "prod" and "change-me" in settings.SECRET_KEY:
+    raise RuntimeError("SECRET_KEY por defecto en producción. Define una SECRET_KEY robusta en .env.prod.")
+
 if not os.getenv("TESTING"):
     Base.metadata.create_all(bind=engine)
     from app.services import scheduler
@@ -34,6 +41,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Manejo global de errores + logging con request-id
+from app.core.errors import register as register_errors
+register_errors(app)
+
 for r in (auth, admin, clients, projects, catalog, generation, dumps, inspector,
           tests, dashboard, costs, agents, exports, jobs, recipes, knowledge,
           migration, naming, dev_docs, connections):
@@ -43,9 +54,21 @@ for r in (auth, admin, clients, projects, catalog, generation, dumps, inspector,
 @app.get("/health")
 def health():
     from app.services.ai.provider import get_provider
+    from sqlalchemy import text
+    from app.core.database import SessionLocal
+
+    db_ok = True
+    try:
+        db = SessionLocal()
+        db.execute(text("SELECT 1"))
+        db.close()
+    except Exception:  # noqa: BLE001
+        db_ok = False
+
     return {
-        "status": "ok",
+        "status": "ok" if db_ok else "degraded",
         "version": settings.VERSION,
+        "database": "up" if db_ok else "down",
         "ai_providers": {
             "claude": get_provider("claude").is_enabled(),
             "openai": get_provider("openai").is_enabled(),

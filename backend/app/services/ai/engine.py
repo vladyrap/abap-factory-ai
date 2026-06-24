@@ -26,6 +26,28 @@ class AIDisabledError(RuntimeError):
     """Ningún proveedor de IA tiene API key configurada."""
 
 
+class CostLimitError(RuntimeError):
+    """Se superó el límite diario de costo de IA configurado para el usuario."""
+
+
+def _check_cost_limit(db: Session, user_id: int | None) -> None:
+    limit = getattr(settings, "DAILY_AI_COST_LIMIT_USD", 0) or 0
+    if limit <= 0 or not user_id:
+        return
+    from datetime import datetime
+    from sqlalchemy import func
+    start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+    spent = (
+        db.query(func.coalesce(func.sum(AIUsage.cost_usd), 0.0))
+        .filter(AIUsage.user_id == user_id, AIUsage.created_at >= start)
+        .scalar()
+    ) or 0.0
+    if spent >= limit:
+        raise CostLimitError(
+            f"Límite diario de IA alcanzado (${spent:.2f} de ${limit:.2f}). Intenta mañana o ajusta el límite."
+        )
+
+
 def _effective_config(db: Session, agent: Agent) -> tuple[str, str | None, float, int, str]:
     """Devuelve (provider, model, temperature, max_tokens, system_prompt) efectivos."""
     cfg = db.query(AgentConfig).filter(AgentConfig.agent_key == agent.key).first()
@@ -63,6 +85,8 @@ def run_agent(
         raise AIDisabledError(
             "No hay proveedor de IA configurado. Define ANTHROPIC_API_KEY u OPENAI_API_KEY."
         )
+
+    _check_cost_limit(db, user_id)
 
     agent = get_agent(agent_key)
     provider_name, model, temperature, max_tokens, system_prompt = _effective_config(db, agent)

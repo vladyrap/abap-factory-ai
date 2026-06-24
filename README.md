@@ -151,6 +151,19 @@ bash deploy.sh                   # build + up + seed; Caddy emite TLS automátic
 
 > Si ninguna clave está configurada, los endpoints de IA responden **503** con un mensaje claro; el resto de la app (proyectos, historial, dashboard) funciona igual.
 
+## Robustez y resiliencia
+- **Manejo global de errores**: respuestas JSON limpias (sin stack traces) para errores de BD,
+  validación e inesperados; cada uno con `request_id` para trazabilidad.
+- **Logging con request-id** y tiempo por request (middleware).
+- **Resiliencia IA**: timeout por llamada + **reintentos con backoff** ante errores transitorios
+  (rate limit, timeout, 5xx, overloaded). Si el proveedor elegido falla, cae al otro.
+- **Guard de costo diario** por usuario (`DAILY_AI_COST_LIMIT_USD`): corta con **429** al superarlo.
+- **Límite de tamaño de entrada** (`MAX_INPUT_CHARS`): rechaza payloads gigantes con **422**.
+- **Pool de BD** con `pool_pre_ping`, reciclaje y overflow; `/health` reporta estado de BD e IA.
+- **No arranca en `ENV=prod` con `SECRET_KEY` por defecto.**
+- **Frontend**: `ErrorBoundary` por vista (un fallo no tumba la app) + interceptor axios que
+  avisa de 429/5xx/timeout/sin-conexión y maneja 401.
+
 ## Seguridad
 - Claves de IA **solo** por variables de entorno (nunca en código).
 - JWT + bcrypt. Permisos por rol en backend (`require_*`) y frontend (`can()`).

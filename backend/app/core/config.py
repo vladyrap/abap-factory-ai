@@ -23,6 +23,13 @@ class Settings(BaseSettings):
 
     LOG_LEVEL: str = "INFO"
     APP_PUBLIC_URL: str = "http://localhost:6600"
+    ENV: str = "dev"   # dev | prod — en prod se valida SECRET_KEY
+
+    # ─── Robustez ───────────────────────────────────────────────────────────
+    AI_TIMEOUT_SECONDS: int = 90        # timeout por llamada a la IA
+    AI_MAX_RETRIES: int = 2             # reintentos ante errores transitorios
+    MAX_INPUT_CHARS: int = 60000        # tope de tamaño de código/dump pegado
+    DAILY_AI_COST_LIMIT_USD: float = 0  # 0 = sin límite; si >0, corta al superarlo por usuario/día
 
     # ─── IA — claves por entorno, NUNCA hardcode ────────────────────────────
     # Proveedor por defecto cuando un agente no especifica uno: "claude" | "openai"

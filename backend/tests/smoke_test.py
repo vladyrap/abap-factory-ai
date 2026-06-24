@@ -75,9 +75,17 @@ check("/auth/me 200", c.get("/api/auth/me", headers=admin_h).status_code == 200)
 check("/auth/me sin token 401", c.get("/api/auth/me").status_code == 401)
 
 print("\n== Catálogo y salud ==")
-check("/health 200", c.get("/health").status_code == 200)
+hb = c.get("/health")
+check("/health 200", hb.status_code == 200)
+check("/health reporta BD e IA", "database" in hb.json() and "ai_providers" in hb.json())
 cat = c.get("/api/catalog/")
 check("/catalog dev_types", cat.status_code == 200 and len(cat.json()["dev_types"]) > 10)
+
+print("\n== Robustez: errores y límites ==")
+check("ruta desconocida 404", c.get("/api/no-existe-xyz", headers=cons_h).status_code == 404)
+big = "A" * 60001  # supera MAX_INPUT_CHARS
+check("payload gigante => 422", c.post("/api/generation/validate", headers=cons_h, json={"source_code": big}).status_code == 422)
+check("input válido => 200", c.post("/api/generation/validate", headers=cons_h, json={"source_code": "REPORT z."}).status_code == 200)
 
 print("\n== Roles (RBAC) ==")
 check("cliente RO no crea cliente 403",

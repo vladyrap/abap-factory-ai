@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from './context/AuthContext'
 import { ProjectProvider } from './context/ProjectContext'
 import { Spinner } from './components/ui/primitives'
 import AppLayout from './components/layout/AppLayout'
+import ErrorBoundary from './components/ErrorBoundary'
 
 import LoginPage from './pages/auth/LoginPage'
 import Dashboard from './pages/Dashboard'
