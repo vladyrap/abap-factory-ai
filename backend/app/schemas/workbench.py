@@ -147,6 +147,16 @@ class NamingPreviewRequest(BaseModel):
     variables: dict = {}
 
 
+# ─── Conexión SAP / abapGit ──────────────────────────────────────────────────
+class SapConnectionUpdate(BaseModel):
+    kind: str = "abapgit"
+    repo_url: Optional[str] = None
+    branch: Optional[str] = "main"
+    sap_package: Optional[str] = None
+    transport_request: Optional[str] = None
+    adt_base_url: Optional[str] = None
+
+
 class ArtifactUpdate(BaseModel):
     """Edición de un artefacto: crea una nueva versión encadenada (parent_id)."""
     code: Optional[str] = None

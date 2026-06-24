@@ -1,0 +1,16 @@
+# Reemplaza abapfactory.tudominio.cl por tu dominio real.
+# Caddy obtiene y renueva el certificado TLS automáticamente.
+abapfactory.tudominio.cl {
+    encode gzip
+
+    # API y health -> backend FastAPI
+    @api path /api/* /health /metrics
+    handle @api {
+        reverse_proxy backend:8000
+    }
+
+    # Resto -> frontend (SPA servido por nginx)
+    handle {
+        reverse_proxy frontend:80
+    }
+}

@@ -165,6 +165,25 @@ check("preview naming", rp.json()["name"] == "ZI_FACTURA")
 rules_block = naming_svc.rules_prompt(TestingSession(), client_id)
 check("rules_prompt inyecta convención", "Z{MODULE}_{NAME}" in rules_block)
 
+print("\n== abapGit export + conexión SAP (sin IA) ==")
+# crea un artefacto en el proyecto para exportar
+dbx = TestingSession()
+from app.models.code_artifact import CodeArtifact as CA
+dbx.add(CA(project_id=pid, name="ZCL_FI_TOOLS", dev_type="class", language="abap_oo",
+           code="CLASS zcl_fi_tools DEFINITION PUBLIC.\nENDCLASS.", version=1, status="generated"))
+dbx.commit(); dbx.close()
+zres = c.get(f"/api/exports/project/{pid}/abapgit.zip", headers=cons_h)
+check("abapGit zip 200 + content-type", zres.status_code == 200 and "zip" in zres.headers.get("content-type", ""))
+import io as _io, zipfile as _zip
+zf = _zip.ZipFile(_io.BytesIO(zres.content))
+names = zf.namelist()
+check("zip tiene .abapgit.xml", ".abapgit.xml" in names)
+check("zip tiene clase en src/ (.clas.abap)", any(n.startswith("src/") and n.endswith(".clas.abap") for n in names))
+check("zip tiene manifest.json", "manifest.json" in names)
+rc = c.put(f"/api/connections/project/{pid}", headers=cons_h, json={"kind": "abapgit", "repo_url": "https://git/x.git", "sap_package": "ZAB_FI"})
+check("guarda conexión SAP 200", rc.status_code == 200)
+check("lee conexión SAP", c.get(f"/api/connections/project/{pid}", headers=cons_h).json().get("sap_package") == "ZAB_FI")
+
 print("\n== IA sin API key => 503 limpio ==")
 r = c.post("/api/generation/code", headers=cons_h, json={"description": "x", "sap_context": {"sap_version": "ECC"}, "save": False})
 check("generate sin key 503", r.status_code == 503)

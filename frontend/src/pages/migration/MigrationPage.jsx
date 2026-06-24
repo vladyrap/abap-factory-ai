@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
-import { ArrowRightLeft, Play, Download, AlertTriangle } from 'lucide-react'
+import { ArrowRightLeft, Play, Download, AlertTriangle, Columns, GitCompare } from 'lucide-react'
+import { DiffEditor } from '@monaco-editor/react'
 import toast from 'react-hot-toast'
 import { migrationApi } from '../../services/api'
 import { useProject } from '../../context/ProjectContext'
@@ -14,6 +15,7 @@ export default function MigrationPage() {
   const [target, setTarget] = useState('S4HANA')
   const [loading, setLoading] = useState(false)
   const [res, setRes] = useState(null)
+  const [diff, setDiff] = useState(false)
 
   const migrate = async () => {
     if (!source.trim()) return toast.error('Pega el código ECC')
@@ -41,6 +43,11 @@ export default function MigrationPage() {
         <Select label="Destino" value={target} onChange={(e) => setTarget(e.target.value)}
           options={(catalog?.migration_targets || []).map((t) => ({ value: t.key, label: t.label }))} className="max-w-md" />
         <Button onClick={migrate} loading={loading}><Play className="h-4 w-4" /> Migrar</Button>
+        {res && (
+          <Button variant="secondary" onClick={() => setDiff((d) => !d)}>
+            {diff ? <Columns className="h-4 w-4" /> : <GitCompare className="h-4 w-4" />} {diff ? 'Lado a lado' : 'Ver diff'}
+          </Button>
+        )}
         {res?.id && (
           <a href={`/api/exports/migration/${res.id}.pdf`} target="_blank" rel="noreferrer">
             <Button variant="secondary"><Download className="h-4 w-4" /> Informe PDF</Button>
@@ -48,20 +55,33 @@ export default function MigrationPage() {
         )}
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      {diff && res ? (
         <Card>
-          <CardHeader title="Código ECC (origen)" />
-          <div className="p-4"><AbapEditor value={source} onChange={(v) => setSource(v || '')} height="440px" /></div>
-        </Card>
-        <Card>
-          <CardHeader title="Código migrado"
-            action={res && <Badge tone={res.compatibility === 'ok' ? 'baja' : res.compatibility === 'parcial' ? 'media' : 'critica'}>{res.compatibility}</Badge>} />
+          <CardHeader title="Diff ECC → S/4" subtitle="Izquierda: ECC original · Derecha: migrado" icon={GitCompare} />
           <div className="p-4">
-            {res ? <AbapEditor value={res.migrated_code || ''} readOnly height="440px" />
-              : <div className="flex h-[440px] items-center justify-center text-ink-600">El código migrado aparecerá aquí.</div>}
+            <div className="overflow-hidden rounded-lg border border-white/10">
+              <DiffEditor height="460px" theme="vs-dark" language="abap"
+                original={source} modified={res.migrated_code || ''}
+                options={{ readOnly: true, renderSideBySide: true, fontSize: 12, minimap: { enabled: false } }} />
+            </div>
           </div>
         </Card>
-      </div>
+      ) : (
+        <div className="grid gap-6 lg:grid-cols-2">
+          <Card>
+            <CardHeader title="Código ECC (origen)" />
+            <div className="p-4"><AbapEditor value={source} onChange={(v) => setSource(v || '')} height="440px" /></div>
+          </Card>
+          <Card>
+            <CardHeader title="Código migrado"
+              action={res && <Badge tone={res.compatibility === 'ok' ? 'baja' : res.compatibility === 'parcial' ? 'media' : 'critica'}>{res.compatibility}</Badge>} />
+            <div className="p-4">
+              {res ? <AbapEditor value={res.migrated_code || ''} readOnly height="440px" />
+                : <div className="flex h-[440px] items-center justify-center text-ink-600">El código migrado aparecerá aquí.</div>}
+            </div>
+          </Card>
+        </div>
+      )}
 
       {res && (
         <div className="grid gap-6 lg:grid-cols-2">

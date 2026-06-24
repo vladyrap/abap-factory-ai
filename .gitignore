@@ -12,6 +12,7 @@ dist/
 
 # Entorno / secretos
 .env
+.env.prod
 backend/.env
 frontend/.env
 *.local

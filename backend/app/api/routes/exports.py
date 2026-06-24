@@ -14,7 +14,7 @@ from app.models.project import Project
 from app.models.requirement import Requirement
 from app.models.migration import Migration
 from app.models.dev_document import DevDocument
-from app.services import exports
+from app.services import exports, abapgit
 
 
 def _as_dict(obj):
@@ -93,6 +93,19 @@ def export_documentation(project_id: int, requirement_id: int | None = None, db:
         test_suites=[_as_dict(t) for t in ts_q.order_by(TestSuite.created_at).all()],
     )
     return _stream(data, "application/pdf", f"documentacion_proyecto_{project_id}.pdf")
+
+
+@router.get("/project/{project_id}/abapgit.zip")
+def export_abapgit(project_id: int, db: Session = Depends(get_db)):
+    """Paquete abapGit (.zip) con todos los artefactos de código del proyecto."""
+    project = db.query(Project).filter(Project.id == project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Proyecto no encontrado")
+    arts = db.query(CodeArtifact).filter(CodeArtifact.project_id == project_id).order_by(CodeArtifact.created_at).all()
+    if not arts:
+        raise HTTPException(status_code=404, detail="El proyecto no tiene artefactos de código")
+    data = abapgit.build_zip(_as_dict(project), arts)
+    return _stream(data, "application/zip", f"abapgit_proyecto_{project_id}.zip")
 
 
 @router.get("/migration/{mig_id}.pdf")

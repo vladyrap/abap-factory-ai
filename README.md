@@ -114,11 +114,30 @@ npm run dev
 | qa@abapfactory.ai | QA |
 | cliente@abapfactory.ai | cliente solo lectura |
 
-## Despliegue con Docker
+## Entrega y transporte (abapGit / ADT)
+
+- **Paquete abapGit (.zip)**: descarga todos los artefactos del proyecto en formato abapGit
+  (carpeta `src/` + `.abapgit.xml` + `manifest.json`), listo para hacer **pull/push** desde tu
+  repo abapGit y activar/transportar en SAP. Endpoint `/exports/project/{id}/abapgit.zip`.
+- **Destino por proyecto**: registra repo git, branch, paquete SAP y orden de transporte
+  (metadatos, **nunca credenciales** — el push real lo hace tu repo git).
+- **Diff visual ECC ↔ S/4**: en Migración, vista lado a lado o diff coloreado del antes/después.
+
+## Despliegue local (dev)
 ```bash
 docker compose up --build
 ```
 App en http://localhost:6600, backend en http://localhost:8000.
+
+## Despliegue en producción (VPS + Docker + Caddy TLS)
+```bash
+cp .env.prod.example .env.prod   # completa claves IA, DB y dominio
+nano Caddyfile                   # pon tu dominio real
+bash deploy.sh                   # build + up + seed; Caddy emite TLS automático
+```
+- `docker-compose.prod.yml`: db + backend + frontend + **Caddy** (TLS automático).
+- Verifica en `https://<tu-dominio>/health`.
+- `.env.prod` está en `.gitignore` (no se versiona).
 
 ## Variables de entorno clave (`backend/.env`)
 | Variable | Descripción |

@@ -90,6 +90,11 @@ export const devDocsApi = {
   get: (id) => api.get(`/dev-docs/${id}`),
 }
 
+export const connectionsApi = {
+  get: (projectId) => api.get(`/connections/project/${projectId}`),
+  set: (projectId, data) => api.put(`/connections/project/${projectId}`, data),
+}
+
 export const knowledgeApi = {
   list: (clientId) => api.get(`/knowledge/client/${clientId}`),
   add: (data) => api.post('/knowledge/', data),
@@ -148,6 +153,7 @@ export const exportUrls = {
     `/api/exports/documentation/${projectId}.pdf${requirementId ? `?requirement_id=${requirementId}` : ''}`,
   migration: (id) => `/api/exports/migration/${id}.pdf`,
   devDoc: (id) => `/api/exports/dev-doc/${id}.pdf`,
+  abapgit: (projectId) => `/api/exports/project/${projectId}/abapgit.zip`,
 }
 
 export default api

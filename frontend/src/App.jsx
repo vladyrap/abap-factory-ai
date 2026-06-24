@@ -15,6 +15,7 @@ import MigrationPage from './pages/migration/MigrationPage'
 import NamingPage from './pages/naming/NamingPage'
 import DevDocPage from './pages/devdocs/DevDocPage'
 import SpecPage from './pages/spec/SpecPage'
+import DeliveryPage from './pages/delivery/DeliveryPage'
 import JobsPage from './pages/jobs/JobsPage'
 import EditorPage from './pages/editor/EditorPage'
 import DumpsPage from './pages/dumps/DumpsPage'
@@ -54,6 +55,7 @@ export default function App() {
           <Route path="inspector" element={<InspectorPage />} />
           <Route path="tests" element={<TestsPage />} />
           <Route path="protocols" element={<ProtocolsPage />} />
+          <Route path="delivery" element={<DeliveryPage />} />
           <Route path="history" element={<HistoryPage />} />
           <Route path="costs" element={<CostsPage />} />
           <Route path="agents" element={<AgentsPage />} />

@@ -8,7 +8,7 @@ import app.models  # noqa: F401 — registra todos los modelos en Base.metadata
 from app.api.routes import (
     auth, admin, clients, projects, catalog, generation, dumps, inspector,
     tests, dashboard, costs, agents, exports, jobs, recipes, knowledge,
-    migration, naming, dev_docs,
+    migration, naming, dev_docs, connections,
 )
 
 setup_logging()
@@ -36,7 +36,7 @@ app.add_middleware(
 
 for r in (auth, admin, clients, projects, catalog, generation, dumps, inspector,
           tests, dashboard, costs, agents, exports, jobs, recipes, knowledge,
-          migration, naming, dev_docs):
+          migration, naming, dev_docs, connections):
     app.include_router(r.router, prefix=settings.API_PREFIX)
 
 

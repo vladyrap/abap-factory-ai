@@ -4,7 +4,7 @@ import { motion } from 'framer-motion'
 import {
   LayoutDashboard, FolderKanban, Wand2, Code2, Bug, ShieldCheck, Workflow, Brain,
   FlaskConical, ClipboardList, History, DollarSign, Users, Bot, LogOut, Cpu, FileText,
-  ArrowRightLeft, Tags, FileStack,
+  ArrowRightLeft, Tags, FileStack, GitBranch,
 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { useProject } from '../../context/ProjectContext'
@@ -26,6 +26,7 @@ const NAV = [
   { to: '/tests', label: 'ABAP Unit', icon: FlaskConical, perm: 'tests' },
   { to: '/protocols', label: 'Protocolos', icon: ClipboardList, perm: 'tests' },
   { to: '/jobs', label: 'Procesos', icon: Cpu, perm: 'create' },
+  { to: '/delivery', label: 'Entrega & abapGit', icon: GitBranch, perm: 'export' },
   { to: '/history', label: 'Historial', icon: History },
   { to: '/costs', label: 'Costos IA', icon: DollarSign, perm: 'costs' },
   { to: '/agents', label: 'Agentes IA', icon: Bot, perm: 'admin' },
