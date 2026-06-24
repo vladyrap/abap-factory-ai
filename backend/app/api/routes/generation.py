@@ -6,12 +6,14 @@ from app.models.generation import Generation
 from app.models.code_artifact import CodeArtifact
 from app.schemas.workbench import (
     GenerateRequest, GenerateResponse, CodeArtifactResponse, EditorRequest, SpecRequest,
-    ArtifactUpdate,
+    ArtifactUpdate, ValidateRequest, RefineRequest, ExtractRequest,
 )
 from app.api.deps import get_current_user, require_builder, require_approver
-from app.services.ai import generator, editor, spec_gen
-from app.services.ai.engine import AIDisabledError
+from app.services.ai import generator, editor, spec_gen, selfheal, intake
+from app.services.ai.engine import AIDisabledError, run_agent, parse_json
+from app.services.ai.agents import json_instruction
 from app.services.ai import pricing
+from app.services import abap_lint
 
 router = APIRouter(prefix="/generation", tags=["Generación ABAP"])
 
@@ -26,11 +28,34 @@ def _guard(fn, *a, **k):
 @router.post("/code", response_model=GenerateResponse)
 def generate(req: GenerateRequest, db: Session = Depends(get_db), user: User = Depends(require_builder)):
     ctx = req.sap_context.model_dump()
-    out = _guard(
-        generator.generate_code, db,
-        description=req.description, sap_context=ctx,
-        project_id=req.project_id, user_id=user.id, agent_override=req.agent_override,
-    )
+    # client_id: explícito o derivado del proyecto (para la memoria RAG)
+    client_id = req.client_id
+    if not client_id and req.project_id:
+        from app.models.project import Project
+        proj = db.query(Project).filter(Project.id == req.project_id).first()
+        client_id = proj.client_id if proj else None
+
+    if req.auto_optimize:
+        out = _guard(
+            selfheal.generate_optimized, db,
+            description=req.description, sap_context=ctx, project_id=req.project_id,
+            user_id=user.id, client_id=client_id, target_score=req.target_score,
+        )
+        lint = out["lint"]
+        quality = out["final_score"]
+        passed = out["passed"]
+        timeline = out["timeline"]
+    else:
+        out = _guard(
+            generator.generate_code, db,
+            description=req.description, sap_context=ctx,
+            project_id=req.project_id, user_id=user.id, agent_override=req.agent_override,
+            client_id=client_id,
+        )
+        lint = abap_lint.lint(out["code"])          # guardrails estáticos siempre
+        quality = lint["score"]
+        passed = not abap_lint.has_blocking_issues(lint)
+        timeline = []
 
     artifact = None
     if req.save and req.project_id:
@@ -38,9 +63,9 @@ def generate(req: GenerateRequest, db: Session = Depends(get_db), user: User = D
             project_id=req.project_id, requirement_id=req.requirement_id, created_by=user.id,
             agent_key=out["agent_key"], provider=out["provider"], model=out["model"],
             sap_context=ctx, prompt=req.description, status="ok",
-            tokens_in=out["tokens_in"], tokens_out=out["tokens_out"],
-            cost_usd=pricing.cost_usd(out["model"], out["tokens_in"], out["tokens_out"]),
-            latency_ms=out["latency_ms"],
+            tokens_in=out.get("tokens_in", 0), tokens_out=out.get("tokens_out", 0),
+            cost_usd=pricing.cost_usd(out["model"], out.get("tokens_in", 0), out.get("tokens_out", 0)),
+            latency_ms=out.get("latency_ms", 0),
         )
         db.add(gen)
         db.flush()
@@ -48,6 +73,8 @@ def generate(req: GenerateRequest, db: Session = Depends(get_db), user: User = D
             project_id=req.project_id, requirement_id=req.requirement_id, generation_id=gen.id,
             created_by=user.id, name=out["object_name"], dev_type=ctx.get("dev_type"),
             language=out["language"], code=out["code"], explanation=out["explanation"],
+            quality_score=quality, lint_findings=lint["findings"],
+            confidence_notes=out.get("confidence_notes", []),
         )
         db.add(artifact)
         db.commit()
@@ -58,7 +85,59 @@ def generate(req: GenerateRequest, db: Session = Depends(get_db), user: User = D
         object_name=out["object_name"], language=out["language"], code=out["code"],
         explanation=out["explanation"], agent_key=out["agent_key"],
         provider=out["provider"], model=out["model"],
+        confidence_notes=out.get("confidence_notes", []), lint=lint,
+        quality_score=quality, passed=passed, timeline=timeline,
+        used_knowledge=out.get("used_knowledge", False),
     )
+
+
+@router.post("/validate")
+def validate_code(req: ValidateRequest, _: User = Depends(get_current_user)):
+    """Linter ABAP estático — SIN IA. Rápido y siempre disponible."""
+    return abap_lint.lint(req.source_code)
+
+
+_REFINE_SCHEMA = '{"code": "<código ABAP resultante>", "notes": "<qué cambió>"}'
+
+
+@router.post("/refine", response_model=CodeArtifactResponse)
+def refine_artifact(req: RefineRequest, db: Session = Depends(get_db), user: User = Depends(require_builder)):
+    """Refinamiento conversacional: aplica una instrucción en lenguaje natural → nueva versión."""
+    art = db.query(CodeArtifact).filter(CodeArtifact.id == req.artifact_id).first()
+    if not art:
+        raise HTTPException(status_code=404, detail="Artefacto no encontrado")
+    prompt = (
+        "Aplica el siguiente cambio al código ABAP, manteniendo el resto intacto y respetando Clean ABAP.\n\n"
+        f"# Instrucción\n{req.instruction}\n\n# Código actual\n```abap\n{art.code[:12000]}\n```\n\n"
+        + json_instruction(_REFINE_SCHEMA)
+    )
+    try:
+        result = run_agent(db, "abap_ecc", prompt, operation="refine",
+                           project_id=art.project_id, user_id=user.id)
+    except AIDisabledError as e:
+        raise HTTPException(status_code=503, detail=str(e))
+    data = parse_json(result.text)
+    new_code = data.get("code") or art.code
+    lint = abap_lint.lint(new_code)
+    new_art = CodeArtifact(
+        project_id=art.project_id, requirement_id=art.requirement_id, generation_id=art.generation_id,
+        created_by=user.id, name=art.name, dev_type=art.dev_type, language=art.language,
+        code=new_code, explanation=data.get("notes") or art.explanation,
+        version=(art.version or 1) + 1, parent_id=art.id, status="edited",
+        quality_score=lint["score"], lint_findings=lint["findings"],
+        confidence_notes=art.confidence_notes,
+    )
+    db.add(new_art)
+    db.commit()
+    db.refresh(new_art)
+    return new_art
+
+
+@router.post("/extract-requirement")
+def extract_requirement(req: ExtractRequest, db: Session = Depends(get_db), user: User = Depends(require_builder)):
+    """Extrae un requerimiento estructurado desde texto libre (correo/spec funcional)."""
+    return _guard(intake.extract_requirement, db, raw_text=req.raw_text,
+                  project_id=req.project_id, user_id=user.id)
 
 
 @router.post("/editor")

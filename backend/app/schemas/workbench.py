@@ -58,8 +58,11 @@ class GenerateRequest(BaseModel):
     sap_context: SapContext
     project_id: Optional[int] = None
     requirement_id: Optional[int] = None
+    client_id: Optional[int] = None
     agent_override: Optional[str] = None
     save: bool = True
+    auto_optimize: bool = False     # self-healing: genera y refina hasta target_score
+    target_score: int = 80
 
 
 class CodeArtifactResponse(BaseModel):
@@ -72,6 +75,9 @@ class CodeArtifactResponse(BaseModel):
     explanation: Optional[str] = None
     version: int
     status: str
+    quality_score: Optional[float] = None
+    lint_findings: list[Any] = []
+    confidence_notes: list[Any] = []
     created_at: datetime
 
     class Config:
@@ -87,6 +93,26 @@ class GenerateResponse(BaseModel):
     agent_key: str
     provider: str
     model: str
+    confidence_notes: list[Any] = []
+    lint: Optional[dict] = None         # resultado del linter estático
+    quality_score: Optional[float] = None
+    passed: Optional[bool] = None       # alcanzó el target (self-healing)
+    timeline: list[Any] = []            # iteraciones del self-healing
+    used_knowledge: bool = False
+
+
+class ValidateRequest(BaseModel):
+    source_code: str
+
+
+class RefineRequest(BaseModel):
+    artifact_id: int
+    instruction: str                    # "agrégale filtro por sociedad", "pásalo a SALV"
+
+
+class ExtractRequest(BaseModel):
+    raw_text: str
+    project_id: Optional[int] = None
 
 
 class ArtifactUpdate(BaseModel):

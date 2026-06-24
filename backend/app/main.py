@@ -7,7 +7,7 @@ from app.core.logging_config import setup_logging
 import app.models  # noqa: F401 — registra todos los modelos en Base.metadata
 from app.api.routes import (
     auth, admin, clients, projects, catalog, generation, dumps, inspector,
-    tests, dashboard, costs, agents, exports, jobs,
+    tests, dashboard, costs, agents, exports, jobs, recipes, knowledge,
 )
 
 setup_logging()
@@ -34,7 +34,7 @@ app.add_middleware(
 )
 
 for r in (auth, admin, clients, projects, catalog, generation, dumps, inspector,
-          tests, dashboard, costs, agents, exports, jobs):
+          tests, dashboard, costs, agents, exports, jobs, recipes, knowledge):
     app.include_router(r.router, prefix=settings.API_PREFIX)
 
 

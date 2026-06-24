@@ -4,6 +4,8 @@ from sqlalchemy.orm import Session
 
 from app.services.ai.engine import run_agent, parse_json
 from app.services.ai.agents import json_instruction
+from app.services import client_knowledge
+
 
 # El agente se elige según la versión SAP del contexto.
 def _pick_agent(sap_version: str, dev_type: str) -> str:
@@ -19,7 +21,9 @@ def _pick_agent(sap_version: str, dev_type: str) -> str:
 
 _SCHEMA = (
     '{"object_name": "<nombre sugerido>", "language": "abap_oo|abap_classic", '
-    '"code": "<código ABAP completo>", "explanation": "<explicación funcional y técnica>"}'
+    '"code": "<código ABAP completo>", "explanation": "<explicación funcional y técnica>", '
+    '"confidence_notes": [{"item": "<nombre de FM/tabla/BAPI u objeto incierto>", '
+    '"reason": "<por qué hay que verificarlo en el sistema>", "confidence": "alta|media|baja"}]}'
 )
 
 
@@ -31,16 +35,23 @@ def generate_code(
     project_id: int | None = None,
     user_id: int | None = None,
     agent_override: str | None = None,
+    client_id: int | None = None,
 ):
     agent_key = agent_override or _pick_agent(
         sap_context.get("sap_version", ""), sap_context.get("dev_type", "")
     )
 
     ctx_lines = "\n".join(f"- {k}: {v}" for k, v in sap_context.items() if v)
+    knowledge = client_knowledge.retrieve(db, client_id, description) if client_id else ""
+    knowledge_block = f"\n{knowledge}\n" if knowledge else ""
+
     prompt = (
         "Genera el objeto de desarrollo ABAP solicitado.\n\n"
-        f"# Contexto SAP\n{ctx_lines}\n\n"
+        f"# Contexto SAP\n{ctx_lines}\n"
+        f"{knowledge_block}\n"
         f"# Requerimiento\n{description}\n\n"
+        "Marca en 'confidence_notes' cualquier nombre de Function Module, tabla, BAPI o "
+        "estructura del que no estés 100% seguro, para que el consultor lo verifique en el sistema.\n\n"
         + json_instruction(_SCHEMA)
     )
 
@@ -60,4 +71,6 @@ def generate_code(
         "language": data.get("language") or "abap_oo",
         "code": data.get("code") or result.text,
         "explanation": data.get("explanation") or "",
+        "confidence_notes": data.get("confidence_notes") or [],
+        "used_knowledge": bool(knowledge),
     }

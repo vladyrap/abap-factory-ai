@@ -50,6 +50,9 @@ export const generationApi = {
   code: (data) => api.post('/generation/code', data),
   editor: (data) => api.post('/generation/editor', data),
   spec: (data) => api.post('/generation/spec', data),
+  validate: (source_code) => api.post('/generation/validate', { source_code }),
+  refine: (artifact_id, instruction) => api.post('/generation/refine', { artifact_id, instruction }),
+  extractRequirement: (raw_text, project_id) => api.post('/generation/extract-requirement', { raw_text, project_id }),
   artifacts: (projectId) => api.get('/generation/artifacts', { params: projectId ? { project_id: projectId } : {} }),
   artifact: (id) => api.get(`/generation/artifacts/${id}`),
   versions: (id) => api.get(`/generation/artifacts/${id}/versions`),
@@ -61,6 +64,16 @@ export const jobsApi = {
   create: (data) => api.post('/jobs/', data),
   list: (projectId) => api.get('/jobs/', { params: projectId ? { project_id: projectId } : {} }),
   get: (id) => api.get(`/jobs/${id}`),
+}
+
+export const recipesApi = {
+  list: () => api.get('/recipes/'),
+}
+
+export const knowledgeApi = {
+  list: (clientId) => api.get(`/knowledge/client/${clientId}`),
+  add: (data) => api.post('/knowledge/', data),
+  remove: (id) => api.delete(`/knowledge/${id}`),
 }
 
 export const dumpsApi = {

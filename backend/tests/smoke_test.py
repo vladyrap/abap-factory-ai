@@ -5,7 +5,10 @@ versionado de artefactos y aprobación, y que los endpoints de IA degraden a 503
 limpio cuando no hay API key. NO llama a proveedores reales de IA.
 """
 import os
+import sys
 os.environ["TESTING"] = "1"
+# Permite ejecutar el test desde cualquier cwd (agrega backend/ al path)
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -110,11 +113,47 @@ check("dashboard stats", c.get("/api/dashboard/stats", headers=cons_h).status_co
 check("costos requiere approver (consultor 403)", c.get("/api/costs/summary", headers=cons_h).status_code == 403)
 check("costos admin 200", c.get("/api/costs/summary", headers=admin_h).status_code == 200)
 
+print("\n== Linter ABAP estático (sin IA) ==")
+from app.services import abap_lint
+bad = "REPORT z.\nLOOP AT lt INTO ls.\n  SELECT * FROM bseg INTO ls2 WHERE belnr = ls-belnr.\nENDLOOP.\nDELETE FROM ztabla."
+lr = abap_lint.lint(bad)
+rules = {f["rule"] for f in lr["findings"]}
+check("detecta SELECT * ", "ZAB001_SELECT_STAR" in rules)
+check("detecta SELECT en LOOP", "ZAB002_SELECT_IN_LOOP" in rules)
+check("detecta DELETE sin WHERE (critical)", "ZAB003_DELETE_NO_WHERE" in rules)
+check("DELETE sin WHERE es bloqueante", abap_lint.has_blocking_issues(lr))
+clean = "REPORT z.\nAUTHORITY-CHECK OBJECT 'S_X'.\nSELECT belnr FROM bkpf INTO TABLE @lt WHERE bukrs = @p_b."
+check("código limpio sin críticos", not abap_lint.has_blocking_issues(abab := abap_lint.lint(clean)))
+
+print("\n== /validate endpoint (sin IA) ==")
+rv = c.post("/api/generation/validate", headers=cons_h, json={"source_code": bad})
+check("/validate 200 con findings", rv.status_code == 200 and rv.json()["critical_count"] >= 1)
+
+print("\n== Recetas (sin IA) ==")
+rr = c.get("/api/recipes/", headers=cons_h)
+check("recetas listadas", rr.status_code == 200 and len(rr.json()) >= 5)
+
+print("\n== Memoria del cliente (RAG) ==")
+rk = c.post("/api/knowledge/", headers=cons_h, json={
+    "client_id": client_id, "kind": "z_object", "title": "Clase util ZCL_FI_TOOLS",
+    "content": "Clase utilitaria ZCL_FI_TOOLS con metodo get_partidas_abiertas para sociedad y fecha."})
+check("ingesta knowledge 201", rk.status_code == 201)
+from app.services import client_knowledge
+ses = TestingSession()
+ctx_txt = client_knowledge.retrieve(ses, client_id, "necesito partidas abiertas por sociedad")
+ses.close()
+check("RAG recupera fragmento relevante", "ZCL_FI_TOOLS" in ctx_txt)
+check("RAG vacío si query irrelevante", client_knowledge.retrieve(TestingSession(), client_id, "color azul gatos") == "")
+
 print("\n== IA sin API key => 503 limpio ==")
 r = c.post("/api/generation/code", headers=cons_h, json={"description": "x", "sap_context": {"sap_version": "ECC"}, "save": False})
 check("generate sin key 503", r.status_code == 503)
+r = c.post("/api/generation/code", headers=cons_h, json={"description": "x", "sap_context": {"sap_version": "ECC"}, "save": False, "auto_optimize": True})
+check("generate auto_optimize sin key 503", r.status_code == 503)
 r = c.post("/api/dumps/analyze", headers=cons_h, json={"raw_dump": "DUMP", "save": False})
 check("dump sin key 503", r.status_code == 503)
+r = c.post("/api/generation/extract-requirement", headers=cons_h, json={"raw_text": "necesito un report"})
+check("extract-requirement sin key 503", r.status_code == 503)
 
 print(f"\n==== RESULTADO: {PASS} PASS / {FAIL} FAIL ====")
 raise SystemExit(1 if FAIL else 0)

@@ -2,7 +2,7 @@ import React from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
-  LayoutDashboard, FolderKanban, Wand2, Code2, Bug, ShieldCheck, Workflow,
+  LayoutDashboard, FolderKanban, Wand2, Code2, Bug, ShieldCheck, Workflow, Brain,
   FlaskConical, ClipboardList, History, DollarSign, Users, Bot, LogOut, Cpu, FileText,
 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
@@ -12,6 +12,7 @@ const NAV = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
   { to: '/wizard', label: 'Flujo guiado', icon: Workflow, perm: 'create' },
   { to: '/projects', label: 'Proyectos', icon: FolderKanban, perm: 'projects' },
+  { to: '/knowledge', label: 'Memoria cliente', icon: Brain, perm: 'create' },
   { to: '/generator', label: 'Generador ABAP', icon: Wand2, perm: 'create' },
   { to: '/spec', label: 'Especificación', icon: FileText, perm: 'create' },
   { to: '/editor', label: 'Editor ABAP', icon: Code2, perm: 'edit' },

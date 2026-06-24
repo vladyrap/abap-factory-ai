@@ -33,6 +33,25 @@ Plataforma web para **generar, analizar, corregir, documentar y probar código A
 | `inspector` | Code Inspector / ATC | calidad, seguridad, performance, clean code |
 | `qa_abap` | QA ABAP | ABAP Unit, pruebas funcionales/regresión/integración |
 
+## Inteligencia y automatización (el consultor hace y sabe lo mínimo)
+
+- **Loop self-healing**: con *Auto-optimizar* activado, el sistema genera → corre el linter
+  estático → inspecciona con IA → si la calidad es baja, **se refactoriza solo** y vuelve a
+  evaluar, hasta alcanzar el score objetivo (o agotar iteraciones). El consultor recibe código
+  que ya pasó calidad.
+- **Linter ABAP estático (sin IA)** + **guardrails duros**: detecta SELECT *, SELECT en LOOP,
+  DELETE/UPDATE sin WHERE (crítico/bloqueante), BREAK-POINT, falta de AUTHORITY-CHECK, etc.
+  Es determinista, instantáneo y no gasta llamadas a IA ni ciclos en SAP. Endpoint `/generation/validate`.
+- **Memoria del cliente (RAG)**: ingiere objetos Z, diccionario y estándares del cliente una vez;
+  el generador los reutiliza automáticamente para producir código consistente con su landscape.
+  Sin dependencias externas (recuperación por relevancia de términos).
+- **Mapa de confianza**: cada generación marca los FM/tablas/BAPIs inciertos para que el consultor
+  revise solo ese 5% riesgoso, no el 100%.
+- **Recetas**: plantillas 1-clic (ALV, OData, CDS, IDoc, RFC-BAPI, job) — elige y completa 1-2 campos.
+- **Refinamiento conversacional**: edita un artefacto con lenguaje natural ("pásalo a SALV",
+  "agrégale filtro por sociedad") → crea una nueva versión.
+- **Ingesta de spec**: pega un correo o spec funcional → el sistema extrae el requerimiento estructurado.
+
 ## Instalación (desarrollo local)
 
 ### Requisitos

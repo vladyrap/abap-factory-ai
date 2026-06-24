@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react'
-import { History, Download, CheckCircle2, GitCompare } from 'lucide-react'
+import { History, Download, CheckCircle2, GitCompare, MessageSquare } from 'lucide-react'
 import { DiffEditor } from '@monaco-editor/react'
 import toast from 'react-hot-toast'
 import { generationApi } from '../services/api'
 import { useProject } from '../context/ProjectContext'
 import { useAuth } from '../context/AuthContext'
-import { Card, CardHeader, Badge, Button } from '../components/ui/primitives'
+import { Card, CardHeader, Badge, Button, Input } from '../components/ui/primitives'
 import AbapEditor from '../components/AbapEditor'
 
 export default function HistoryPage() {
@@ -15,6 +15,8 @@ export default function HistoryPage() {
   const [sel, setSel] = useState(null)
   const [versions, setVersions] = useState([])
   const [showDiff, setShowDiff] = useState(false)
+  const [instruction, setInstruction] = useState('')
+  const [refining, setRefining] = useState(false)
 
   const reload = () => generationApi.artifacts(activeId).then((r) => setArtifacts(r.data)).catch(() => {})
   useEffect(() => { reload() }, [activeId])
@@ -23,6 +25,17 @@ export default function HistoryPage() {
     const { data } = await generationApi.artifact(id)
     setSel(data); setShowDiff(false)
     generationApi.versions(id).then((r) => setVersions(r.data)).catch(() => setVersions([]))
+  }
+
+  const refine = async () => {
+    if (!instruction.trim()) return toast.error('Escribe qué cambiar')
+    setRefining(true)
+    try {
+      const { data } = await generationApi.refine(sel.id, instruction)
+      toast.success(`Nueva versión v${data.version}`)
+      setInstruction(''); reload(); open(data.id)
+    } catch (e) { toast.error(e.response?.data?.detail || 'Error') }
+    finally { setRefining(false) }
   }
 
   const approve = async () => {
@@ -103,6 +116,17 @@ export default function HistoryPage() {
                   <AbapEditor value={sel.code} readOnly height="380px" />
                 )}
                 {sel.explanation && <p className="mt-4 whitespace-pre-wrap text-sm text-ink-300">{sel.explanation}</p>}
+
+                {can('edit') && (
+                  <div className="mt-4 flex items-end gap-2 rounded-lg border border-ink-800 bg-ink-950/40 p-3">
+                    <div className="flex-1">
+                      <Input label="Refinar (lenguaje natural)" value={instruction} onChange={(e) => setInstruction(e.target.value)}
+                        placeholder='Ej: "agrégale filtro por sociedad" o "pásalo a SALV"'
+                        onKeyDown={(e) => e.key === 'Enter' && refine()} />
+                    </div>
+                    <Button onClick={refine} loading={refining}><MessageSquare className="h-4 w-4" /> Aplicar</Button>
+                  </div>
+                )}
               </>
             )}
           </div>

@@ -1,5 +1,5 @@
 from datetime import datetime
-from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, JSON, Float
 from sqlalchemy.orm import relationship
 from app.core.database import Base
 
@@ -23,6 +23,11 @@ class CodeArtifact(Base):
     version = Column(Integer, default=1)
     parent_id = Column(Integer, ForeignKey("code_artifacts.id"))  # versión anterior
     status = Column(String(30), default="generated")   # generated | edited | approved
+
+    # Calidad y confianza (self-healing + mapa de confianza)
+    quality_score = Column(Float)                       # score combinado final
+    lint_findings = Column(JSON, default=list)          # hallazgos del linter estático
+    confidence_notes = Column(JSON, default=list)       # ítems a verificar en sistema
 
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

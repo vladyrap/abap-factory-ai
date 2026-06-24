@@ -9,6 +9,7 @@ import LoginPage from './pages/auth/LoginPage'
 import Dashboard from './pages/Dashboard'
 import WizardPage from './pages/wizard/WizardPage'
 import ProjectsPage from './pages/projects/ProjectsPage'
+import KnowledgePage from './pages/knowledge/KnowledgePage'
 import GeneratorPage from './pages/generator/GeneratorPage'
 import SpecPage from './pages/spec/SpecPage'
 import JobsPage from './pages/jobs/JobsPage'
@@ -38,6 +39,7 @@ export default function App() {
           <Route index element={<Dashboard />} />
           <Route path="wizard" element={<WizardPage />} />
           <Route path="projects" element={<ProjectsPage />} />
+          <Route path="knowledge" element={<KnowledgePage />} />
           <Route path="generator" element={<GeneratorPage />} />
           <Route path="spec" element={<SpecPage />} />
           <Route path="editor" element={<EditorPage />} />

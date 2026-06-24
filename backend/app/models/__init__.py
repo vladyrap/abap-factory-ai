@@ -13,10 +13,11 @@ from app.models.test_protocol import TestProtocol, PROTOCOL_TYPES
 from app.models.ai_usage import AIUsage
 from app.models.agent_config import AgentConfig
 from app.models.job import Job, JOB_TYPES
+from app.models.client_knowledge import ClientKnowledge, KNOWLEDGE_KINDS
 
 __all__ = [
     "User", "UserRole", "Client", "Project", "Requirement", "TechSpec",
     "Generation", "CodeArtifact", "DumpAnalysis", "CodeInspection",
     "TestSuite", "TestProtocol", "PROTOCOL_TYPES", "AIUsage", "AgentConfig",
-    "Job", "JOB_TYPES",
+    "Job", "JOB_TYPES", "ClientKnowledge", "KNOWLEDGE_KINDS",
 ]
