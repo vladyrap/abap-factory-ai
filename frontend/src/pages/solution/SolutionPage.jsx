@@ -24,10 +24,10 @@ export default function SolutionPage() {
   const [loading, setLoading] = useState(false)
   const [fullDelivery, setFullDelivery] = useState(false)
   const [res, setRes] = useState(null)
+  const [dragOver, setDragOver] = useState(false)
   const fileRef = useRef()
 
-  const onFile = async (e) => {
-    const f = e.target.files?.[0]
+  const handleFile = async (f) => {
     if (!f) return
     const isText = /\.(txt|md|csv|log|abap)$/i.test(f.name)
     if (isText) {
@@ -47,7 +47,13 @@ export default function SolutionPage() {
         toast.error(err.response?.data?.detail || 'No se pudo leer el archivo', { id: t })
       }
     }
-    e.target.value = ''
+  }
+
+  const onFile = async (e) => { await handleFile(e.target.files?.[0]); e.target.value = '' }
+
+  const onDrop = async (e) => {
+    e.preventDefault(); setDragOver(false)
+    await handleFile(e.dataTransfer.files?.[0])
   }
 
   const resolve = async () => {
@@ -86,8 +92,16 @@ export default function SolutionPage() {
             </>
           } />
           <div className="space-y-4 p-5">
-            <Textarea rows={10} value={requirement} onChange={(e) => setRequirement(e.target.value)}
-              placeholder="Pega aquí el correo, acta o especificación funcional. Ej: 'Cuando se graba un pedido con monto > X debe validar el centro de costo y mostrar error si...'" />
+            <div
+              onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
+              onDragLeave={() => setDragOver(false)}
+              onDrop={onDrop}
+              className={`rounded-xl border-2 border-dashed transition ${dragOver ? 'border-neon-400 bg-neon-500/5' : 'border-white/10'}`}
+            >
+              <Textarea rows={10} value={requirement} onChange={(e) => setRequirement(e.target.value)}
+                className="border-0 bg-transparent"
+                placeholder="Pega o ARRASTRA aquí el correo, acta o spec funcional (PDF/Word/txt). Ej: 'Cuando se graba un pedido con monto > X debe validar el centro de costo y mostrar error si...'" />
+            </div>
 
             <button onClick={() => setShowExisting((s) => !s)} className="flex items-center gap-1 text-sm text-ink-400 hover:text-ink-200">
               {showExisting ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
@@ -186,6 +200,7 @@ export default function SolutionPage() {
                       {res.spec_id && <a href={`/api/exports/spec/${res.spec_id}.pdf`} target="_blank" rel="noreferrer"><Button variant="secondary"><Download className="h-4 w-4" /> Spec PDF</Button></a>}
                       {res.dev_doc_id && <a href={`/api/exports/dev-doc/${res.dev_doc_id}.pdf`} target="_blank" rel="noreferrer"><Button variant="secondary"><Download className="h-4 w-4" /> Doc paso a paso</Button></a>}
                       {activeId && <a href={`/api/exports/documentation/${activeId}.pdf`} target="_blank" rel="noreferrer"><Button variant="secondary"><Download className="h-4 w-4" /> Documentación completa</Button></a>}
+                      {activeId && <a href={`/api/exports/project/${activeId}/abapgit.zip`} target="_blank" rel="noreferrer"><Button variant="secondary"><Download className="h-4 w-4" /> Paquete abapGit</Button></a>}
                     </div>
                   </div>
                 )}

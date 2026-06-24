@@ -4,9 +4,15 @@ from app.core.database import get_db
 from app.core.security import verify_password, get_password_hash, create_access_token
 from app.models.user import User, UserRole
 from app.schemas.user import UserCreate, UserResponse, Token, LoginRequest
-from app.api.deps import get_current_user, require_admin
+from app.api.deps import get_current_user, require_admin, effective_permissions
 
 router = APIRouter(prefix="/auth", tags=["Autenticación"])
+
+
+def _with_perms(db: Session, user: User) -> User:
+    """Adjunta los permisos efectivos al objeto usuario para la respuesta."""
+    user.permissions = sorted(effective_permissions(db, user))
+    return user
 
 
 @router.post("/login", response_model=Token)
@@ -17,12 +23,12 @@ def login(credentials: LoginRequest, db: Session = Depends(get_db)):
     if not user.is_active:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Cuenta desactivada")
     token = create_access_token({"sub": str(user.id), "role": user.role.value})
-    return Token(access_token=token, user=user)
+    return Token(access_token=token, user=_with_perms(db, user))
 
 
 @router.get("/me", response_model=UserResponse)
-def get_me(current_user: User = Depends(get_current_user)):
-    return current_user
+def get_me(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    return _with_perms(db, current_user)
 
 
 @router.post("/users", response_model=UserResponse, status_code=201, dependencies=[Depends(require_admin)])

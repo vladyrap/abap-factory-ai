@@ -170,6 +170,14 @@ export const adminApi = {
   toggleActive: (id) => api.put(`/admin/users/${id}/toggle-active`),
 }
 
+export const rolesApi = {
+  list: () => api.get('/roles/'),
+  permissions: () => api.get('/roles/permissions'),
+  create: (data) => api.post('/roles/', data),
+  update: (id, data) => api.patch(`/roles/${id}`, data),
+  remove: (id) => api.delete(`/roles/${id}`),
+}
+
 // URLs de exportación (descarga directa con token vía fetch en componente)
 export const exportUrls = {
   abap: (id) => `/api/exports/artifact/${id}.abap`,

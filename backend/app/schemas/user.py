@@ -19,6 +19,7 @@ class UserUpdate(BaseModel):
     first_name: Optional[str] = None
     last_name: Optional[str] = None
     role: Optional[UserRole] = None
+    role_id: Optional[int] = None
     is_active: Optional[bool] = None
     password: Optional[str] = None
 
@@ -26,8 +27,10 @@ class UserUpdate(BaseModel):
 class UserResponse(UserBase):
     id: int
     role: UserRole
+    role_id: Optional[int] = None
     is_active: bool
     created_at: datetime
+    permissions: list[str] = []     # permisos efectivos (se completa en login / me)
 
     class Config:
         from_attributes = True

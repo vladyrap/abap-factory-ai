@@ -10,6 +10,22 @@ class UnsupportedFile(ValueError):
     pass
 
 
+def _ocr_pdf(content: bytes) -> str:
+    """OCR de un PDF escaneado. Best-effort: requiere pytesseract + pdf2image + binarios
+    (tesseract, poppler). Si no están, devuelve '' y el caller informa al usuario."""
+    try:
+        import pytesseract
+        from pdf2image import convert_from_bytes
+    except Exception:  # noqa: BLE001 — libs OCR no instaladas
+        return ""
+    try:
+        images = convert_from_bytes(content, dpi=200)
+        parts = [pytesseract.image_to_string(img, lang="spa+eng") for img in images]
+        return "\n".join(parts).strip()
+    except Exception:  # noqa: BLE001 — binarios faltantes o error de render
+        return ""
+
+
 def extract(filename: str, content: bytes) -> str:
     name = (filename or "").lower()
 
@@ -22,7 +38,16 @@ def extract(filename: str, content: bytes) -> str:
         except ImportError as e:  # pragma: no cover
             raise UnsupportedFile("Soporte PDF no instalado (pypdf).") from e
         reader = PdfReader(io.BytesIO(content))
-        return "\n".join((page.extract_text() or "") for page in reader.pages).strip()
+        text = "\n".join((page.extract_text() or "") for page in reader.pages).strip()
+        if text:
+            return text
+        # PDF sin texto (escaneado) -> intentar OCR si está disponible
+        ocr = _ocr_pdf(content)
+        if ocr:
+            return ocr
+        raise UnsupportedFile(
+            "El PDF parece escaneado (sin texto). Instala OCR (tesseract + poppler) o pega el texto."
+        )
 
     if name.endswith(".docx"):
         try:

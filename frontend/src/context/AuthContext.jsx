@@ -3,13 +3,12 @@ import { authApi } from '../services/api'
 
 const AuthContext = createContext(null)
 
-// Permisos por rol (cliente: solo lectura)
-const PERMS = {
-  admin: ['create', 'edit', 'approve', 'dumps', 'tests', 'export', 'projects', 'costs', 'admin'],
-  tech_lead: ['create', 'edit', 'approve', 'dumps', 'tests', 'export', 'projects', 'costs'],
-  consultant: ['create', 'edit', 'dumps', 'tests', 'export', 'projects'],
-  qa: ['tests', 'dumps', 'export'],
-  client_readonly: ['export'],
+// Mapeo de claves "gruesas" del menú a permisos granulares del backend.
+const COARSE_MAP = {
+  create: 'code.generate', edit: 'code.edit', approve: 'code.approve',
+  projects: 'project.manage', dumps: 'dump.analyze', tests: 'tests.generate',
+  costs: 'costs.view', admin: 'users.manage', export: 'export.run',
+  roles: 'roles.manage',
 }
 
 export function AuthProvider({ children }) {
@@ -23,7 +22,7 @@ export function AuthProvider({ children }) {
     const token = localStorage.getItem('token')
     if (token) {
       authApi.me()
-        .then((r) => setUser(r.data))
+        .then((r) => { setUser(r.data); localStorage.setItem('user', JSON.stringify(r.data)) })
         .catch(() => { localStorage.removeItem('token'); localStorage.removeItem('user') })
         .finally(() => setLoading(false))
     } else {
@@ -45,10 +44,17 @@ export function AuthProvider({ children }) {
     setUser(null)
   }
 
-  const can = (perm) => !!user && (PERMS[user.role] || []).includes(perm)
+  // Permiso granular directo
+  const hasPerm = (key) => {
+    const perms = user?.permissions || []
+    return perms.includes('*') || perms.includes(key)
+  }
+
+  // Permiso "grueso" (compatibilidad con el menú y pantallas existentes)
+  const can = (coarse) => hasPerm(COARSE_MAP[coarse] || coarse)
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, can }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, can, hasPerm }}>
       {children}
     </AuthContext.Provider>
   )

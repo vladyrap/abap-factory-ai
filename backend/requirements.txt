@@ -17,5 +17,9 @@ openpyxl==3.1.5
 reportlab==4.2.2
 pypdf==4.3.1
 python-docx==1.1.2
+# OCR opcional para PDF escaneado (requiere binarios tesseract + poppler en el SO)
+pytesseract==0.3.13
+pdf2image==1.17.0
+Pillow==10.4.0
 anthropic==0.39.0
 openai==1.51.0

@@ -8,7 +8,7 @@ import app.models  # noqa: F401 — registra todos los modelos en Base.metadata
 from app.api.routes import (
     auth, admin, clients, projects, catalog, generation, dumps, inspector,
     tests, dashboard, costs, agents, exports, jobs, recipes, knowledge,
-    migration, naming, dev_docs, connections, solution,
+    migration, naming, dev_docs, connections, solution, roles,
 )
 
 setup_logging()
@@ -24,6 +24,8 @@ if not os.getenv("TESTING"):
     Base.metadata.create_all(bind=engine)
     from app.services import scheduler
     scheduler.start()
+    from app.services.role_seed import ensure_system_roles
+    ensure_system_roles()
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -47,7 +49,7 @@ register_errors(app)
 
 for r in (auth, admin, clients, projects, catalog, generation, dumps, inspector,
           tests, dashboard, costs, agents, exports, jobs, recipes, knowledge,
-          migration, naming, dev_docs, connections, solution):
+          migration, naming, dev_docs, connections, solution, roles):
     app.include_router(r.router, prefix=settings.API_PREFIX)
 
 

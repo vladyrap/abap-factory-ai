@@ -192,6 +192,28 @@ rc = c.put(f"/api/connections/project/{pid}", headers=cons_h, json={"kind": "aba
 check("guarda conexión SAP 200", rc.status_code == 200)
 check("lee conexión SAP", c.get(f"/api/connections/project/{pid}", headers=cons_h).json().get("sap_package") == "ZAB_FI")
 
+print("\n== RBAC dinámico (roles a bajo nivel) ==")
+me = c.get("/api/auth/me", headers=admin_h).json()
+check("admin tiene permiso '*'", "*" in me.get("permissions", []))
+perms = c.get("/api/roles/permissions", headers=cons_h).json()
+check("catálogo de permisos >= 20", len(perms.get("all_keys", [])) >= 20)
+check("consultor NO crea rol (403)", c.post("/api/roles/", headers=cons_h, json={"name": "X", "permissions": []}).status_code == 403)
+rr = c.post("/api/roles/", headers=admin_h, json={"name": "Solo Lectura Custom", "permissions": ["code.read", "export.run"]})
+check("admin crea rol 201", rr.status_code == 201)
+new_role_id = rr.json()["id"]
+# crear usuario y asignarle el rol dinámico
+nu = c.post("/api/auth/users", headers=admin_h, json={"email": "low@x.io", "password": "pass1234", "first_name": "L", "last_name": "P"})
+check("crea usuario 201", nu.status_code == 201)
+uid = nu.json()["id"]
+ar = c.patch(f"/api/admin/users/{uid}", headers=admin_h, json={"role_id": new_role_id})
+check("asigna rol dinámico", ar.status_code == 200)
+low_h = {"Authorization": f"Bearer {token('low@x.io')}"}
+lme = c.get("/api/auth/me", headers=low_h).json()
+check("permisos efectivos del rol custom", set(lme.get("permissions", [])) == {"code.read", "export.run"})
+check("rol custom NO puede crear cliente (403)", c.post("/api/clients/", headers=low_h, json={"name": "Y"}).status_code == 403)
+# borrar rol del sistema bloqueado / rol en uso bloqueado
+check("no borra rol en uso (400)", c.delete(f"/api/roles/{new_role_id}", headers=admin_h).status_code == 400)
+
 print("\n== IA sin API key => 503 limpio ==")
 r = c.post("/api/generation/code", headers=cons_h, json={"description": "x", "sap_context": {"sap_version": "ECC"}, "save": False})
 check("generate sin key 503", r.status_code == 503)

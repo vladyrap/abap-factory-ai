@@ -183,7 +183,20 @@ bash deploy.sh                   # build + up + seed; Caddy emite TLS automátic
 - **Frontend**: `ErrorBoundary` por vista (un fallo no tumba la app) + interceptor axios que
   avisa de 429/5xx/timeout/sin-conexión y maneja 401.
 
+## Roles dinámicos (RBAC a bajo nivel)
+- **Crea roles a medida** con permisos granulares (≈24 claves: `code.generate`, `code.approve`,
+  `dump.analyze`, `migration.run`, `roles.manage`, `costs.view`, …) o `*` (superusuario).
+- 5 roles base del sistema (no borrables) + los que definas. Asignación de rol dinámico por
+  usuario; los usuarios sin rol dinámico usan el mapeo de su rol base.
+- Backend: `require_perm("code.generate")`, etc. — toda la autorización pasa por permisos.
+  Frontend: `hasPerm("code.approve")` / `can("create")`. Pantalla **Roles y permisos**.
+
+## Lectura de requerimiento PDF/Word + OCR
+- Sube/arrastra el documento funcional; el servidor extrae el texto (`pypdf`/`python-docx`).
+- **OCR** para PDFs escaneados (best-effort: requiere `tesseract` + `poppler`, ya incluidos en
+  el Dockerfile; si faltan, avisa para pegar el texto).
+
 ## Seguridad
 - Claves de IA **solo** por variables de entorno (nunca en código).
-- JWT + bcrypt. Permisos por rol en backend (`require_*`) y frontend (`can()`).
+- JWT + bcrypt. Autorización por **permisos granulares** (backend `require_perm`, frontend `hasPerm`).
 - Cada llamada a IA se registra en `ai_usage` para auditoría y control de costos.
