@@ -161,6 +161,7 @@ class SolutionRequest(BaseModel):
     project_id: Optional[int] = None
     client_id: Optional[int] = None
     save: bool = True
+    full_delivery: bool = False   # encadena spec + pruebas ABAP Unit + documento paso a paso
 
 
 # ─── Conexión SAP / abapGit ──────────────────────────────────────────────────

@@ -22,17 +22,32 @@ export default function SolutionPage() {
   const [existing, setExisting] = useState('')
   const [showExisting, setShowExisting] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [fullDelivery, setFullDelivery] = useState(false)
   const [res, setRes] = useState(null)
   const fileRef = useRef()
 
-  const onFile = (e) => {
+  const onFile = async (e) => {
     const f = e.target.files?.[0]
     if (!f) return
-    if (f.size > 2 * 1024 * 1024) return toast.error('Archivo muy grande (máx 2MB de texto)')
-    const reader = new FileReader()
-    reader.onload = () => setRequirement(String(reader.result || ''))
-    reader.readAsText(f)
-    toast.success(`Cargado: ${f.name}`)
+    const isText = /\.(txt|md|csv|log|abap)$/i.test(f.name)
+    if (isText) {
+      if (f.size > 2 * 1024 * 1024) return toast.error('Archivo muy grande (máx 2MB)')
+      const reader = new FileReader()
+      reader.onload = () => setRequirement(String(reader.result || ''))
+      reader.readAsText(f)
+      toast.success(`Cargado: ${f.name}`)
+    } else {
+      // PDF / Word -> extracción en el servidor
+      const t = toast.loading('Leyendo documento…')
+      try {
+        const { data } = await solutionApi.extractFile(f)
+        setRequirement(data.text)
+        toast.success(`Leído: ${f.name}`, { id: t })
+      } catch (err) {
+        toast.error(err.response?.data?.detail || 'No se pudo leer el archivo', { id: t })
+      }
+    }
+    e.target.value = ''
   }
 
   const resolve = async () => {
@@ -41,7 +56,7 @@ export default function SolutionPage() {
     try {
       const { data } = await solutionApi.build({
         requirement_text: requirement, existing_code: existing || null,
-        project_id: activeId, save: !!activeId,
+        project_id: activeId, save: !!activeId, full_delivery: fullDelivery,
       })
       setRes(data)
       toast.success(`Resuelto: ${TYPE_LABEL[data.solution_type] || data.solution_type}`)
@@ -66,8 +81,8 @@ export default function SolutionPage() {
         <Card className="lg:col-span-2">
           <CardHeader title="Requerimiento funcional" icon={FileInput} action={
             <>
-              <input ref={fileRef} type="file" accept=".txt,.md,.csv,.log" className="hidden" onChange={onFile} />
-              <Button variant="ghost" onClick={() => fileRef.current?.click()}><Upload className="h-4 w-4" /> Subir</Button>
+              <input ref={fileRef} type="file" accept=".txt,.md,.csv,.log,.pdf,.docx" className="hidden" onChange={onFile} />
+              <Button variant="ghost" onClick={() => fileRef.current?.click()}><Upload className="h-4 w-4" /> Subir PDF/Word/txt</Button>
             </>
           } />
           <div className="space-y-4 p-5">
@@ -83,6 +98,10 @@ export default function SolutionPage() {
                 className="font-mono text-xs" placeholder="Pega el código a corregir/migrar, o el dump ST22…" />
             )}
 
+            <label className="flex items-center gap-2 text-sm text-ink-300">
+              <input type="checkbox" checked={fullDelivery} onChange={(e) => setFullDelivery(e.target.checked)} className="accent-brand-600" />
+              Entrega completa (código + spec técnica + pruebas ABAP Unit + documento paso a paso)
+            </label>
             <Button onClick={resolve} loading={loading} className="w-full"><Sparkles className="h-4 w-4" /> Resolver</Button>
           </div>
         </Card>
@@ -143,6 +162,31 @@ export default function SolutionPage() {
                     {res.confidence_notes.map((n, i) => (
                       <p key={i} className="text-xs text-ink-300"><b>{n.item}</b> — {n.reason}</p>
                     ))}
+                  </div>
+                )}
+
+                {res.full_delivery && (
+                  <div className="rounded-lg border border-neon-400/20 bg-neon-500/5 p-4">
+                    <p className="mb-2 text-sm font-semibold text-neon-400">Entrega completa</p>
+                    <div className="grid grid-cols-3 gap-2 text-center text-sm">
+                      <div className="rounded-lg border border-white/10 p-2">
+                        <p className="text-ink-400">Spec</p>
+                        <p className="font-bold text-ink-100">{res.spec ? '✓' : '—'}</p>
+                      </div>
+                      <div className="rounded-lg border border-white/10 p-2">
+                        <p className="text-ink-400">Pruebas</p>
+                        <p className="font-bold text-ink-100">{res.tests?.cases?.length ?? (res.tests ? '✓' : '—')}</p>
+                      </div>
+                      <div className="rounded-lg border border-white/10 p-2">
+                        <p className="text-ink-400">Objetos doc</p>
+                        <p className="font-bold text-ink-100">{res.dev_doc?.objects?.length ?? (res.dev_doc ? '✓' : '—')}</p>
+                      </div>
+                    </div>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {res.spec_id && <a href={`/api/exports/spec/${res.spec_id}.pdf`} target="_blank" rel="noreferrer"><Button variant="secondary"><Download className="h-4 w-4" /> Spec PDF</Button></a>}
+                      {res.dev_doc_id && <a href={`/api/exports/dev-doc/${res.dev_doc_id}.pdf`} target="_blank" rel="noreferrer"><Button variant="secondary"><Download className="h-4 w-4" /> Doc paso a paso</Button></a>}
+                      {activeId && <a href={`/api/exports/documentation/${activeId}.pdf`} target="_blank" rel="noreferrer"><Button variant="secondary"><Download className="h-4 w-4" /> Documentación completa</Button></a>}
+                    </div>
                   </div>
                 )}
               </>

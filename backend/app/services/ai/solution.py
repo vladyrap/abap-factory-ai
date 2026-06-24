@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 
 from app.services.ai.engine import run_agent, parse_json
 from app.services.ai.agents import json_instruction
-from app.services.ai import generator, dump_solver, migrator
+from app.services.ai import generator, dump_solver, migrator, spec_gen, test_gen, dev_doc
 from app.services import abap_lint, naming
 
 logger = logging.getLogger(__name__)
@@ -79,8 +79,13 @@ def build(
     project_id: int | None = None,
     user_id: int | None = None,
     client_id: int | None = None,
+    full_delivery: bool = False,
 ):
-    """Pipeline completo: clasifica y ejecuta el camino adecuado."""
+    """Pipeline completo: clasifica y ejecuta el camino adecuado.
+
+    Si full_delivery=True y hay código, encadena spec técnica + pruebas ABAP Unit +
+    documento paso a paso (entrega completa en un clic).
+    """
     cls = classify(db, requirement_text, project_id, user_id)
 
     # Contexto SAP: lo inferido por la clasificación + override del usuario (gana el override).
@@ -105,10 +110,9 @@ def build(
                     "explanation": dump.get("root_cause"), "dump": dump,
                     "object_name": dump.get("program") or "FIX", "language": "abap_oo",
                     "confidence_notes": []})
-        return out
 
     # ─── Camino 2: migración con código existente ───────────────────────────
-    if stype == "migracion" and existing_code:
+    elif stype == "migracion" and existing_code:
         target = ctx.get("sap_version") if ctx.get("sap_version", "").upper().startswith(("S4", "BTP")) else "S4HANA"
         mig = migrator.migrate_code(db, source_code=existing_code, target=target,
                                     project_id=project_id, user_id=user_id)
@@ -116,10 +120,9 @@ def build(
                     "explanation": mig.get("notes"), "changes": mig.get("changes", []),
                     "migration": mig, "object_name": "MIGRADO", "language": "abap_oo",
                     "confidence_notes": []})
-        return out
 
     # ─── Camino 3: corrección/mejora/ajuste sobre código existente ──────────
-    if stype in ("correccion_bug", "mejora_enhancement", "ajuste") and existing_code:
+    elif stype in ("correccion_bug", "mejora_enhancement", "ajuste") and existing_code:
         agent_key = generator._pick_agent(ctx.get("sap_version", ""), ctx.get("dev_type", ""))
         ctx2 = dict(ctx); ctx2["_client_id"] = client_id
         fix = _fix_existing(db, instruction=desc, existing_code=existing_code, sap_context=ctx2,
@@ -129,13 +132,33 @@ def build(
                     "changes": fix.get("changes", []), "confidence_notes": fix.get("confidence_notes", []),
                     "object_name": cls.get("target_object") or "AJUSTE", "language": "abap_oo",
                     "lint": abap_lint.lint(code)})
-        return out
 
     # ─── Camino 4 (default): desarrollo nuevo ───────────────────────────────
-    gen = generator.generate_code(db, description=desc, sap_context=ctx,
-                                  project_id=project_id, user_id=user_id, client_id=client_id)
-    out.update({"kind": "new", "code": gen["code"], "explanation": gen["explanation"],
-                "object_name": gen["object_name"], "language": gen["language"],
-                "confidence_notes": gen["confidence_notes"], "agent_key": gen["agent_key"],
-                "lint": abap_lint.lint(gen["code"])})
+    else:
+        gen = generator.generate_code(db, description=desc, sap_context=ctx,
+                                      project_id=project_id, user_id=user_id, client_id=client_id)
+        out.update({"kind": "new", "code": gen["code"], "explanation": gen["explanation"],
+                    "object_name": gen["object_name"], "language": gen["language"],
+                    "confidence_notes": gen["confidence_notes"], "agent_key": gen["agent_key"],
+                    "lint": abap_lint.lint(gen["code"])})
+
+    # ─── Entrega completa opcional: spec + pruebas + documento paso a paso ───
+    if full_delivery and out.get("code"):
+        out["full_delivery"] = True
+        try:
+            out["spec"] = spec_gen.generate_spec(db, description=desc, sap_context=ctx,
+                                                  project_id=project_id, user_id=user_id)
+        except Exception:  # noqa: BLE001
+            logger.exception("solution.spec_failed"); out["spec"] = None
+        try:
+            out["tests"] = test_gen.generate_unit_tests(db, source_code=out["code"], sap_context=ctx,
+                                                         project_id=project_id, user_id=user_id)
+        except Exception:  # noqa: BLE001
+            logger.exception("solution.tests_failed"); out["tests"] = None
+        try:
+            out["dev_doc"] = dev_doc.generate_document(db, description=desc, sap_context=ctx,
+                                                       project_id=project_id, user_id=user_id, client_id=client_id)
+        except Exception:  # noqa: BLE001
+            logger.exception("solution.devdoc_failed"); out["dev_doc"] = None
+
     return out

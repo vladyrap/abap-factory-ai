@@ -46,6 +46,12 @@ qué se necesita y lo **resuelve de punta a punta**:
 Devuelve el tipo detectado, el plan, el código, la explicación, los cambios y las notas de
 confianza; guarda el resultado como artefacto versionable del proyecto. Endpoint `/solution/build`.
 
+- **Lee PDF / Word / texto**: sube el documento funcional y el servidor extrae el texto
+  (`pypdf` / `python-docx`). Endpoint `/solution/extract-file`.
+- **Entrega completa (un clic)**: con la casilla activada, además del código encadena la
+  **especificación técnica + pruebas ABAP Unit + documento técnico paso a paso**, todo
+  persistido y descargable en PDF.
+
 ## Migración, calidad y documentación
 
 - **Migración ECC → S/4HANA / ABAP Cloud**: pega código ECC y obtén la versión modernizada,

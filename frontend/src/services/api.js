@@ -116,6 +116,11 @@ export const connectionsApi = {
 
 export const solutionApi = {
   build: (data) => api.post('/solution/build', data),
+  extractFile: (file) => {
+    const fd = new FormData()
+    fd.append('file', file)
+    return api.post('/solution/extract-file', fd, { headers: { 'Content-Type': 'multipart/form-data' } })
+  },
 }
 
 export const knowledgeApi = {

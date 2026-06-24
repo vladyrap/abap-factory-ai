@@ -207,7 +207,22 @@ r = c.post("/api/dev-docs/generate", headers=cons_h, json={"description": "x", "
 check("dev-doc sin key 503", r.status_code == 503)
 r = c.post("/api/solution/build", headers=cons_h, json={"requirement_text": "Necesito un report ALV de facturas FI", "save": False})
 check("solution/build sin key 503", r.status_code == 503)
+r = c.post("/api/solution/build", headers=cons_h, json={"requirement_text": "Report ALV", "save": False, "full_delivery": True})
+check("solution full_delivery sin key 503", r.status_code == 503)
 check("SOLUTION_TYPES definidos", len(__import__("app.services.ai.solution", fromlist=["SOLUTION_TYPES"]).SOLUTION_TYPES) == 6)
+
+print("\n== Lectura de archivo de requerimiento (sin IA) ==")
+from app.services import extract_text
+check("extrae texto .txt", extract_text.extract("req.txt", "Requerimiento: report FI".encode()) == "Requerimiento: report FI")
+try:
+    extract_text.extract("x.exe", b"\x00"); _ok = False
+except extract_text.UnsupportedFile:
+    _ok = True
+check("rechaza formato no soportado", _ok)
+import io as _io2
+fr = c.post("/api/solution/extract-file", headers=cons_h,
+            files={"file": ("spec.txt", _io2.BytesIO(b"Necesito un fix en ZCL_X"), "text/plain")})
+check("extract-file .txt 200", fr.status_code == 200 and "ZCL_X" in fr.json()["text"])
 
 print(f"\n==== RESULTADO: {PASS} PASS / {FAIL} FAIL ====")
 raise SystemExit(1 if FAIL else 0)
