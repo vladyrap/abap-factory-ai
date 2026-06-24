@@ -70,6 +70,26 @@ export const recipesApi = {
   list: () => api.get('/recipes/'),
 }
 
+export const migrationApi = {
+  migrate: (data) => api.post('/migration/migrate', data),
+  list: (projectId) => api.get('/migration/', { params: projectId ? { project_id: projectId } : {} }),
+  get: (id) => api.get(`/migration/${id}`),
+}
+
+export const namingApi = {
+  objectTypes: () => api.get('/naming/object-types'),
+  list: (clientId) => api.get(`/naming/client/${clientId}`),
+  save: (data) => api.post('/naming/', data),
+  preview: (pattern, variables) => api.post('/naming/preview', { pattern, variables }),
+  remove: (id) => api.delete(`/naming/${id}`),
+}
+
+export const devDocsApi = {
+  generate: (data) => api.post('/dev-docs/generate', data),
+  list: (projectId) => api.get('/dev-docs/', { params: projectId ? { project_id: projectId } : {} }),
+  get: (id) => api.get(`/dev-docs/${id}`),
+}
+
 export const knowledgeApi = {
   list: (clientId) => api.get(`/knowledge/client/${clientId}`),
   add: (data) => api.post('/knowledge/', data),
@@ -126,6 +146,8 @@ export const exportUrls = {
   protocol: (id) => `/api/exports/protocol/${id}.xlsx`,
   documentation: (projectId, requirementId) =>
     `/api/exports/documentation/${projectId}.pdf${requirementId ? `?requirement_id=${requirementId}` : ''}`,
+  migration: (id) => `/api/exports/migration/${id}.pdf`,
+  devDoc: (id) => `/api/exports/dev-doc/${id}.pdf`,
 }
 
 export default api

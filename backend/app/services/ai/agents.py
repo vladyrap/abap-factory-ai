@@ -83,6 +83,19 @@ _QA_PATTERNS = """
 - Cubre: camino feliz, valores límite, entradas inválidas y que se lancen las excepciones esperadas.
 """
 
+_CLOUD_PATTERNS = """
+# Patrones de referencia (ABAP Cloud / BTP / RAP moderno)
+- Usa SOLO objetos LIBERADOS (released, C1) para ABAP Cloud; nunca accedas directo a tablas no
+  liberadas — usa las CDS/APIs released equivalentes. Respeta la sintaxis ABAP for Cloud (strict).
+- RAP: separa CDS de interfaz (I_*) y de proyección (C_*), Behavior Definition (managed/unmanaged/draft),
+  Behavior Implementation (RAP handler/saver classes), determinations, validations y actions.
+- EML: usa MODIFY ENTITIES / READ ENTITIES / COMMIT ENTITIES para operar el BO desde código.
+- Servicios: Service Definition + Service Binding (OData V4 preferente; V2 si aplica), Fiori Elements.
+- Prohibido en Cloud: SUBMIT, CALL TRANSACTION clásica, dynpros, WRITE a lista clásica, acceso a SY-* obsoleto.
+- Para BTP/Steampunk: integra vía comunicación (Communication Arrangement), Outbound HTTP con
+  cl_http_destination_provider, y secretos vía destinations, nunca hardcode.
+"""
+
 
 @dataclass
 class Agent:
@@ -118,6 +131,19 @@ AGENTS: dict[str, Agent] = {
             "Behavior Implementations, managed/unmanaged), OData V2/V4 y SEGW, Fiori Elements, y los "
             "simplification items del SI-Check. Conoces la compatibilidad ECC→S/4 (campos extendidos, "
             "tablas obsoletas como BSEG/VBUK, ABAP restricciones del compilador en cloud)." + _COMMON_RULES + _S4_PATTERNS
+        ),
+    ),
+    "abap_cloud": Agent(
+        key="abap_cloud",
+        name="ABAP Cloud / BTP & RAP",
+        description="Especialista en ABAP moderno: ABAP Cloud, BTP ABAP Environment (Steampunk), RAP completo, EML, Service Bindings y released APIs.",
+        system_prompt=(
+            "Eres un arquitecto de ABAP Cloud y del SAP BTP ABAP Environment (Steampunk). Dominas el "
+            "ABAP RESTful Application Programming Model (RAP) de punta a punta: CDS de interfaz y "
+            "proyección, Behavior Definition/Implementation (managed, unmanaged, draft), determinations, "
+            "validations, actions, EML, Service Definition/Binding (OData V4/V2), Fiori Elements, y la "
+            "integración cloud (Communication Arrangements, destinations, outbound HTTP). Conoces a fondo "
+            "las restricciones del compilador ABAP for Cloud y el uso exclusivo de APIs liberadas." + _COMMON_RULES + _CLOUD_PATTERNS
         ),
     ),
     "webdynpro": Agent(

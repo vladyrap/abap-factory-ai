@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import {
   LayoutDashboard, FolderKanban, Wand2, Code2, Bug, ShieldCheck, Workflow, Brain,
   FlaskConical, ClipboardList, History, DollarSign, Users, Bot, LogOut, Cpu, FileText,
+  ArrowRightLeft, Tags, FileStack,
 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { useProject } from '../../context/ProjectContext'
@@ -15,6 +16,9 @@ const NAV = [
   { to: '/projects', label: 'Proyectos', icon: FolderKanban, perm: 'projects' },
   { to: '/knowledge', label: 'Memoria cliente', icon: Brain, perm: 'create' },
   { to: '/generator', label: 'Generador ABAP', icon: Wand2, perm: 'create' },
+  { to: '/migration', label: 'Migración S/4', icon: ArrowRightLeft, perm: 'create' },
+  { to: '/naming', label: 'Nomenclaturas', icon: Tags, perm: 'create' },
+  { to: '/dev-docs', label: 'Documento técnico', icon: FileStack, perm: 'create' },
   { to: '/spec', label: 'Especificación', icon: FileText, perm: 'create' },
   { to: '/editor', label: 'Editor ABAP', icon: Code2, perm: 'edit' },
   { to: '/dumps', label: 'Analizador Dumps', icon: Bug, perm: 'dumps' },

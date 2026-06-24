@@ -12,6 +12,8 @@ from app.models.test_protocol import TestProtocol
 from app.models.test_suite import TestSuite
 from app.models.project import Project
 from app.models.requirement import Requirement
+from app.models.migration import Migration
+from app.models.dev_document import DevDocument
 from app.services import exports
 
 
@@ -91,6 +93,24 @@ def export_documentation(project_id: int, requirement_id: int | None = None, db:
         test_suites=[_as_dict(t) for t in ts_q.order_by(TestSuite.created_at).all()],
     )
     return _stream(data, "application/pdf", f"documentacion_proyecto_{project_id}.pdf")
+
+
+@router.get("/migration/{mig_id}.pdf")
+def export_migration(mig_id: int, db: Session = Depends(get_db)):
+    m = db.query(Migration).filter(Migration.id == mig_id).first()
+    if not m:
+        raise HTTPException(status_code=404, detail="Migración no encontrada")
+    data = exports.migration_to_pdf(_as_dict(m))
+    return _stream(data, "application/pdf", f"migracion_{mig_id}.pdf")
+
+
+@router.get("/dev-doc/{doc_id}.pdf")
+def export_dev_doc(doc_id: int, db: Session = Depends(get_db)):
+    d = db.query(DevDocument).filter(DevDocument.id == doc_id).first()
+    if not d:
+        raise HTTPException(status_code=404, detail="Documento no encontrado")
+    data = exports.dev_document_pdf(_as_dict(d))
+    return _stream(data, "application/pdf", f"documento_tecnico_{doc_id}.pdf")
 
 
 @router.get("/protocol/{protocol_id}.xlsx")

@@ -1,9 +1,9 @@
-import React, { useState } from 'react'
-import { ShieldCheck, Play, Download } from 'lucide-react'
+import React, { useState, useEffect } from 'react'
+import { ShieldCheck, Play, Download, FileCode } from 'lucide-react'
 import toast from 'react-hot-toast'
-import { inspectorApi } from '../../services/api'
+import { inspectorApi, generationApi } from '../../services/api'
 import { useProject } from '../../context/ProjectContext'
-import { Card, CardHeader, Button, Badge } from '../../components/ui/primitives'
+import { Card, CardHeader, Button, Badge, Select } from '../../components/ui/primitives'
 import AbapEditor from '../../components/AbapEditor'
 
 function ScoreRing({ score }) {
@@ -21,6 +21,20 @@ export default function InspectorPage() {
   const [code, setCode] = useState('')
   const [loading, setLoading] = useState(false)
   const [res, setRes] = useState(null)
+  const [artifacts, setArtifacts] = useState([])
+  const [artifactId, setArtifactId] = useState('')
+
+  useEffect(() => {
+    generationApi.artifacts(activeId).then((r) => setArtifacts(r.data)).catch(() => {})
+  }, [activeId])
+
+  const loadArtifact = async (id) => {
+    setArtifactId(id)
+    if (!id) return
+    const { data } = await generationApi.artifact(id)
+    setCode(data.code)
+    toast.success(`Cargado: ${data.name}`)
+  }
 
   const inspect = async () => {
     if (!code.trim()) return toast.error('Pega código ABAP')
@@ -47,9 +61,12 @@ export default function InspectorPage() {
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
-          <CardHeader title="Código a revisar" />
+          <CardHeader title="Código a revisar" subtitle="Carga un artefacto creado o pega tu propio código" icon={FileCode} />
           <div className="space-y-4 p-4">
-            <AbapEditor value={code} onChange={(v) => setCode(v || '')} height="420px" />
+            <Select value={artifactId} onChange={(e) => loadArtifact(e.target.value)}
+              options={[{ value: '', label: '— Pegar código manualmente —' },
+                        ...artifacts.map((a) => ({ value: a.id, label: `${a.name} (v${a.version})` }))]} />
+            <AbapEditor value={code} onChange={(v) => setCode(v || '')} height="380px" />
             <Button onClick={inspect} loading={loading} className="w-full"><Play className="h-4 w-4" /> Inspeccionar</Button>
           </div>
         </Card>

@@ -4,17 +4,25 @@ from sqlalchemy.orm import Session
 
 from app.services.ai.engine import run_agent, parse_json
 from app.services.ai.agents import json_instruction
-from app.services import client_knowledge
+from app.services import client_knowledge, naming
 
 
-# El agente se elige según la versión SAP del contexto.
+# El agente se elige según la versión SAP y el tipo de desarrollo.
+_CLOUD_VERSIONS = {"S4HANA_CLOUD_PUBLIC", "BTP_ABAP"}
+_CLOUD_TYPES = {"rap", "rap_managed", "rap_unmanaged", "rap_draft", "behavior_def",
+                "service_def", "service_binding", "eml", "released_api", "abap_cloud_class",
+                "fiori_elements", "cds_transactional"}
+_S4_TYPES = {"cds", "cds_analytical", "amdp", "odata", "segw"}
+
+
 def _pick_agent(sap_version: str, dev_type: str) -> str:
-    s4_types = {"cds", "amdp", "rap", "odata", "segw"}
-    if (dev_type or "").lower() in s4_types:
-        return "abap_s4"
-    if (dev_type or "").lower() in {"webdynpro", "wda"}:
+    ver = (sap_version or "").upper()
+    dt = (dev_type or "").lower()
+    if ver in _CLOUD_VERSIONS or dt in _CLOUD_TYPES:
+        return "abap_cloud"
+    if dt in {"webdynpro", "wda"}:
         return "webdynpro"
-    if (sap_version or "").upper().startswith("S4"):
+    if dt in _S4_TYPES or ver.startswith("S4"):
         return "abap_s4"
     return "abap_ecc"
 
@@ -44,10 +52,12 @@ def generate_code(
     ctx_lines = "\n".join(f"- {k}: {v}" for k, v in sap_context.items() if v)
     knowledge = client_knowledge.retrieve(db, client_id, description) if client_id else ""
     knowledge_block = f"\n{knowledge}\n" if knowledge else ""
+    naming_block = naming.rules_prompt(db, client_id) if client_id else ""
 
     prompt = (
         "Genera el objeto de desarrollo ABAP solicitado.\n\n"
         f"# Contexto SAP\n{ctx_lines}\n"
+        f"{naming_block}"
         f"{knowledge_block}\n"
         f"# Requerimiento\n{description}\n\n"
         "Marca en 'confidence_notes' cualquier nombre de Function Module, tabla, BAPI o "

@@ -134,6 +134,46 @@ def documentation_pdf(*, project: dict, requirement: dict | None, spec: dict | N
     return _pdf_from_blocks("Documentación Técnica del Desarrollo", blocks)
 
 
+def migration_to_pdf(m: dict, title: str = "Informe de Migración ECC → S/4HANA") -> bytes:
+    changes = [
+        f"[{c.get('area')}] {c.get('reason')}\n  ANTES: {c.get('before')}\n  DESPUÉS: {c.get('after')}"
+        for c in m.get("changes", [])
+    ]
+    si = [f"{s.get('item')} · {s.get('table')}: {s.get('note')}" for s in m.get("simplification_items", [])]
+    blocks = [
+        ("Destino", m.get("target")),
+        ("Compatibilidad", m.get("compatibility")),
+        ("Resumen", m.get("notes")),
+        ("Código migrado", m.get("migrated_code")),
+        ("Cambios aplicados", changes),
+        ("Simplification items", si),
+        ("Pasos manuales", m.get("manual_steps")),
+    ]
+    return _pdf_from_blocks(title, blocks)
+
+
+def dev_document_pdf(d: dict, title: str | None = None) -> bytes:
+    """Documento técnico: inventario de objetos + paso a paso (lo que el equipo construye)."""
+    objs = [
+        f"[{o.get('action', '').upper()}] {o.get('name')} ({o.get('type')}) — paquete {o.get('package') or '—'}\n"
+        f"  {o.get('description') or ''}" + (f"\n  Depende de: {o.get('dependencies')}" if o.get('dependencies') else "")
+        for o in d.get("objects", [])
+    ]
+    steps = [
+        f"Paso {s.get('n')}: {s.get('title')}\n  {s.get('detail')}"
+        + (f"\n  Objetos: {', '.join(s.get('objects', []))}" if s.get('objects') else "")
+        for s in d.get("steps", [])
+    ]
+    blocks = [
+        ("Resumen", d.get("summary")),
+        (f"Inventario de objetos ({len(d.get('objects', []))})", objs),
+        ("Construcción paso a paso", steps),
+        ("Plan de transporte", d.get("transport_plan")),
+        ("Plan de rollback", d.get("rollback_plan")),
+    ]
+    return _pdf_from_blocks(title or d.get("title") or "Documento Técnico del Desarrollo", blocks)
+
+
 def inspection_to_pdf(ins: dict, title: str = "Informe Code Inspector / ATC") -> bytes:
     findings = [
         f"[{f.get('severity')}] {f.get('rule')} (línea {f.get('line')}): {f.get('message')} → {f.get('suggestion')}"

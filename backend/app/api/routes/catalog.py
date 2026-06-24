@@ -7,7 +7,14 @@ SAP_VERSIONS = [
     {"key": "ECC", "label": "SAP ECC"},
     {"key": "S4HANA", "label": "SAP S/4HANA (On-Premise)"},
     {"key": "S4HANA_CLOUD_PRIVATE", "label": "S/4HANA Cloud Private"},
-    {"key": "S4HANA_CLOUD_PUBLIC", "label": "S/4HANA Cloud Public"},
+    {"key": "S4HANA_CLOUD_PUBLIC", "label": "S/4HANA Cloud Public (ABAP Cloud)"},
+    {"key": "BTP_ABAP", "label": "SAP BTP ABAP Environment (Steampunk)"},
+]
+
+MIGRATION_TARGETS = [
+    {"key": "S4HANA", "label": "S/4HANA On-Premise (ABAP estándar)"},
+    {"key": "S4HANA_CLOUD_PUBLIC", "label": "S/4HANA Cloud Public (ABAP Cloud)"},
+    {"key": "BTP_ABAP", "label": "BTP ABAP Environment (ABAP Cloud / RAP)"},
 ]
 
 MODULES = ["FI", "CO", "MM", "SD", "PP", "QM", "PM", "HR", "Basis", "Integracion"]
@@ -33,11 +40,24 @@ DEV_TYPES = [
     {"key": "tax_form", "label": "Formulario tributario", "group": "Integración"},
     {"key": "odata", "label": "OData Gateway (SEGW)", "group": "S/4HANA"},
     {"key": "cds", "label": "CDS View", "group": "S/4HANA"},
+    {"key": "cds_analytical", "label": "CDS Analítica (cube/query)", "group": "S/4HANA"},
     {"key": "amdp", "label": "AMDP (SQLScript)", "group": "S/4HANA"},
     {"key": "rap", "label": "RAP (Behavior + BO)", "group": "S/4HANA"},
     {"key": "webdynpro", "label": "WebDynpro ABAP", "group": "UI"},
     {"key": "job", "label": "Job / Programa batch", "group": "Otros"},
     {"key": "validation_fi", "label": "Validación FI/MM/SD", "group": "Otros"},
+    # ─── ABAP moderno / Cloud / BTP ───
+    {"key": "rap_managed", "label": "RAP Managed BO", "group": "ABAP Cloud"},
+    {"key": "rap_unmanaged", "label": "RAP Unmanaged BO", "group": "ABAP Cloud"},
+    {"key": "rap_draft", "label": "RAP con Draft", "group": "ABAP Cloud"},
+    {"key": "cds_transactional", "label": "CDS transaccional (RAP)", "group": "ABAP Cloud"},
+    {"key": "behavior_def", "label": "Behavior Definition/Implementation", "group": "ABAP Cloud"},
+    {"key": "service_def", "label": "Service Definition", "group": "ABAP Cloud"},
+    {"key": "service_binding", "label": "Service Binding (OData V4/V2)", "group": "ABAP Cloud"},
+    {"key": "eml", "label": "EML (Entity Manipulation Language)", "group": "ABAP Cloud"},
+    {"key": "abap_cloud_class", "label": "Clase ABAP Cloud (released APIs)", "group": "ABAP Cloud"},
+    {"key": "fiori_elements", "label": "App Fiori Elements", "group": "ABAP Cloud"},
+    {"key": "released_api", "label": "API liberada / Communication Scenario", "group": "ABAP Cloud"},
 ]
 
 COMPLEXITIES = ["baja", "media", "alta", "critica"]
@@ -63,6 +83,7 @@ DUMP_TYPES = [
 def get_catalog():
     return {
         "sap_versions": SAP_VERSIONS,
+        "migration_targets": MIGRATION_TARGETS,
         "modules": MODULES,
         "dev_types": DEV_TYPES,
         "complexities": COMPLEXITIES,

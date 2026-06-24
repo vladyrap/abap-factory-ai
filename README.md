@@ -33,6 +33,27 @@ Plataforma web para **generar, analizar, corregir, documentar y probar código A
 | `inspector` | Code Inspector / ATC | calidad, seguridad, performance, clean code |
 | `qa_abap` | QA ABAP | ABAP Unit, pruebas funcionales/regresión/integración |
 
+## Migración, calidad y documentación
+
+- **Migración ECC → S/4HANA / ABAP Cloud**: pega código ECC y obtén la versión modernizada,
+  con cada cambio explicado (antes/después + motivo), simplification items, compatibilidad y
+  pasos manuales. Destinos: S/4 on-premise, S/4 Cloud Public (ABAP Cloud) y BTP ABAP. Export PDF.
+- **Code Inspector**: revisa código **creado** (carga un artefacto del proyecto) o **pegado**.
+- **Documento técnico (objeto por objeto)**: lista CADA objeto a crear/modificar/usar con su
+  nombre exacto, tipo, paquete y dependencias, + guía **paso a paso**, plan de transporte y
+  rollback. **Descargable en PDF**.
+- **Nomenclaturas dinámicas**: cada empresa define sus patrones por tipo de objeto
+  (tablas, clases, CDS, RAP, etc.) con marcadores `Z{MODULE}_{NAME}`; el generador los aplica
+  automáticamente. Preview en vivo.
+
+## ABAP moderno (ABAP Cloud / BTP / RAP)
+
+Soporta todos los entornos: ECC, S/4HANA on-premise, S/4HANA Cloud Private/Public y
+**SAP BTP ABAP Environment (Steampunk)**. Tipos modernos: RAP (managed/unmanaged/draft),
+CDS de interfaz/proyección/analítica, Behavior Definition/Implementation, Service
+Definition/Binding (OData V4/V2), EML, Fiori Elements y APIs liberadas. Un **7º agente
+especializado** (`abap_cloud`) cubre ABAP Cloud/BTP/RAP con sus restricciones (solo APIs C1).
+
 ## Inteligencia y automatización (el consultor hace y sabe lo mínimo)
 
 - **Loop self-healing**: con *Auto-optimizar* activado, el sistema genera → corre el linter

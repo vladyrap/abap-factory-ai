@@ -115,6 +115,38 @@ class ExtractRequest(BaseModel):
     project_id: Optional[int] = None
 
 
+# ─── Migración ECC → S/4 / Cloud ─────────────────────────────────────────────
+class MigrateRequest(BaseModel):
+    source_code: str
+    target: str = "S4HANA"      # S4HANA | S4HANA_CLOUD_PUBLIC | BTP_ABAP
+    project_id: Optional[int] = None
+    save: bool = True
+
+
+# ─── Documento técnico (objeto por objeto + paso a paso) ─────────────────────
+class DevDocRequest(BaseModel):
+    description: str
+    sap_context: SapContext
+    project_id: Optional[int] = None
+    requirement_id: Optional[int] = None
+    client_id: Optional[int] = None
+    save: bool = True
+
+
+# ─── Nomenclaturas dinámicas ─────────────────────────────────────────────────
+class NamingRuleCreate(BaseModel):
+    client_id: int
+    object_type: str
+    pattern: str
+    example: Optional[str] = None
+    description: Optional[str] = None
+
+
+class NamingPreviewRequest(BaseModel):
+    pattern: str
+    variables: dict = {}
+
+
 class ArtifactUpdate(BaseModel):
     """Edición de un artefacto: crea una nueva versión encadenada (parent_id)."""
     code: Optional[str] = None

@@ -11,6 +11,9 @@ import WizardPage from './pages/wizard/WizardPage'
 import ProjectsPage from './pages/projects/ProjectsPage'
 import KnowledgePage from './pages/knowledge/KnowledgePage'
 import GeneratorPage from './pages/generator/GeneratorPage'
+import MigrationPage from './pages/migration/MigrationPage'
+import NamingPage from './pages/naming/NamingPage'
+import DevDocPage from './pages/devdocs/DevDocPage'
 import SpecPage from './pages/spec/SpecPage'
 import JobsPage from './pages/jobs/JobsPage'
 import EditorPage from './pages/editor/EditorPage'
@@ -41,6 +44,9 @@ export default function App() {
           <Route path="projects" element={<ProjectsPage />} />
           <Route path="knowledge" element={<KnowledgePage />} />
           <Route path="generator" element={<GeneratorPage />} />
+          <Route path="migration" element={<MigrationPage />} />
+          <Route path="naming" element={<NamingPage />} />
+          <Route path="dev-docs" element={<DevDocPage />} />
           <Route path="spec" element={<SpecPage />} />
           <Route path="editor" element={<EditorPage />} />
           <Route path="jobs" element={<JobsPage />} />
