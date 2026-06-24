@@ -1,9 +1,11 @@
 import React from 'react'
+import { motion } from 'framer-motion'
 import { cn } from '../../lib/cn'
+import AnimatedNumber from '../AnimatedNumber'
 
 export function Card({ className, children, ...props }) {
   return (
-    <div className={cn('rounded-xl border border-ink-800 bg-ink-900/60 backdrop-blur', className)} {...props}>
+    <div className={cn('glass rounded-2xl shadow-card', className)} {...props}>
       {children}
     </div>
   )
@@ -11,11 +13,15 @@ export function Card({ className, children, ...props }) {
 
 export function CardHeader({ title, subtitle, icon: Icon, action }) {
   return (
-    <div className="flex items-start justify-between gap-3 border-b border-ink-800 px-5 py-4">
+    <div className="hud-line flex items-start justify-between gap-3 border-b border-white/10 px-5 py-4">
       <div className="flex items-center gap-3">
-        {Icon && <Icon className="h-5 w-5 text-brand-400" />}
+        {Icon && (
+          <span className="flex h-9 w-9 items-center justify-center rounded-lg border border-neon-400/20 bg-neon-500/10 text-neon-400">
+            <Icon className="h-[18px] w-[18px]" />
+          </span>
+        )}
         <div>
-          <h3 className="font-semibold text-ink-50">{title}</h3>
+          <h3 className="font-display font-semibold tracking-tight text-ink-50">{title}</h3>
           {subtitle && <p className="text-sm text-ink-400">{subtitle}</p>}
         </div>
       </div>
@@ -25,17 +31,18 @@ export function CardHeader({ title, subtitle, icon: Icon, action }) {
 }
 
 const BTN = {
-  primary: 'bg-brand-600 hover:bg-brand-500 text-white',
-  secondary: 'bg-ink-800 hover:bg-ink-700 text-ink-100 border border-ink-700',
-  ghost: 'hover:bg-ink-800 text-ink-300',
-  danger: 'bg-red-600 hover:bg-red-500 text-white',
+  primary: 'bg-gradient-to-r from-brand-600 to-neon-600 text-white shadow-glow-brand hover:brightness-110',
+  secondary: 'bg-white/5 text-ink-100 border border-white/10 hover:border-neon-400/40 hover:bg-white/10',
+  ghost: 'text-ink-300 hover:bg-white/5 hover:text-ink-100',
+  danger: 'bg-gradient-to-r from-red-600 to-rose-600 text-white hover:brightness-110',
 }
 
 export function Button({ variant = 'primary', className, loading, children, ...props }) {
   return (
-    <button
+    <motion.button
+      whileTap={{ scale: 0.97 }}
       className={cn(
-        'inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition disabled:opacity-50 disabled:cursor-not-allowed',
+        'inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-medium transition disabled:opacity-50 disabled:cursor-not-allowed',
         BTN[variant], className
       )}
       disabled={loading || props.disabled}
@@ -43,19 +50,19 @@ export function Button({ variant = 'primary', className, loading, children, ...p
     >
       {loading && <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />}
       {children}
-    </button>
+    </motion.button>
   )
 }
 
 const BADGE = {
-  baja: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
-  media: 'bg-amber-500/15 text-amber-400 border-amber-500/30',
-  alta: 'bg-orange-500/15 text-orange-400 border-orange-500/30',
-  critica: 'bg-red-500/15 text-red-400 border-red-500/30',
-  info: 'bg-sky-500/15 text-sky-400 border-sky-500/30',
-  warning: 'bg-amber-500/15 text-amber-400 border-amber-500/30',
-  error: 'bg-red-500/15 text-red-400 border-red-500/30',
-  default: 'bg-ink-700/50 text-ink-200 border-ink-600',
+  baja: 'bg-emerald-500/10 text-emerald-300 border-emerald-400/30',
+  media: 'bg-amber-500/10 text-amber-300 border-amber-400/30',
+  alta: 'bg-orange-500/10 text-orange-300 border-orange-400/30',
+  critica: 'bg-red-500/10 text-red-300 border-red-400/30',
+  info: 'bg-neon-500/10 text-neon-400 border-neon-400/30',
+  warning: 'bg-amber-500/10 text-amber-300 border-amber-400/30',
+  error: 'bg-red-500/10 text-red-300 border-red-400/30',
+  default: 'bg-white/5 text-ink-200 border-white/10',
 }
 
 export function Badge({ tone = 'default', children, className }) {
@@ -66,11 +73,13 @@ export function Badge({ tone = 'default', children, className }) {
   )
 }
 
+const fieldCls = 'w-full rounded-xl border border-white/10 bg-ink-950/60 px-3 py-2 text-sm text-ink-100 outline-none transition focus:border-neon-400/50 focus:shadow-glow'
+
 export function Input({ className, label, ...props }) {
   return (
     <label className="block">
       {label && <span className="mb-1 block text-sm font-medium text-ink-300">{label}</span>}
-      <input className={cn('w-full rounded-lg border border-ink-700 bg-ink-950 px-3 py-2 text-sm text-ink-100 outline-none focus:border-brand-500', className)} {...props} />
+      <input className={cn(fieldCls, className)} {...props} />
     </label>
   )
 }
@@ -79,7 +88,7 @@ export function Textarea({ className, label, ...props }) {
   return (
     <label className="block">
       {label && <span className="mb-1 block text-sm font-medium text-ink-300">{label}</span>}
-      <textarea className={cn('w-full rounded-lg border border-ink-700 bg-ink-950 px-3 py-2 text-sm text-ink-100 outline-none focus:border-brand-500', className)} {...props} />
+      <textarea className={cn(fieldCls, className)} {...props} />
     </label>
   )
 }
@@ -88,9 +97,9 @@ export function Select({ className, label, options = [], ...props }) {
   return (
     <label className="block">
       {label && <span className="mb-1 block text-sm font-medium text-ink-300">{label}</span>}
-      <select className={cn('w-full rounded-lg border border-ink-700 bg-ink-950 px-3 py-2 text-sm text-ink-100 outline-none focus:border-brand-500', className)} {...props}>
+      <select className={cn(fieldCls, className)} {...props}>
         {options.map((o) => (
-          <option key={o.value ?? o} value={o.value ?? o}>{o.label ?? o}</option>
+          <option key={o.value ?? o} value={o.value ?? o} className="bg-ink-900">{o.label ?? o}</option>
         ))}
       </select>
     </label>
@@ -98,18 +107,31 @@ export function Select({ className, label, options = [], ...props }) {
 }
 
 export function Spinner({ className }) {
-  return <span className={cn('inline-block h-5 w-5 animate-spin rounded-full border-2 border-ink-600 border-t-brand-500', className)} />
+  return <span className={cn('inline-block h-5 w-5 animate-spin rounded-full border-2 border-white/10 border-t-neon-400', className)} />
 }
 
-export function Stat({ label, value, sub, icon: Icon, tone = 'brand' }) {
+const STAT_TONE = {
+  brand: 'from-brand-500/15 text-brand-300',
+  neon: 'from-neon-500/15 text-neon-400',
+  plasma: 'from-plasma-500/15 text-plasma-400',
+  amber: 'from-amber-500/15 text-amber-300',
+}
+
+export function Stat({ label, value, sub, icon: Icon, tone = 'neon', numeric = false, decimals = 0, prefix = '', suffix = '' }) {
+  const toneCls = STAT_TONE[tone] || STAT_TONE.neon
   return (
-    <Card className="p-5">
+    <motion.div
+      initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+      className={cn('glass glass-hover hud-line relative overflow-hidden rounded-2xl bg-gradient-to-br to-transparent p-5', toneCls)}
+    >
       <div className="flex items-center justify-between">
-        <p className="text-sm text-ink-400">{label}</p>
-        {Icon && <Icon className={cn('h-5 w-5', tone === 'brand' ? 'text-brand-400' : 'text-ink-400')} />}
+        <p className="text-xs font-medium uppercase tracking-wider text-ink-400">{label}</p>
+        {Icon && <Icon className={cn('h-5 w-5', toneCls.split(' ')[1])} />}
       </div>
-      <p className="mt-2 text-2xl font-bold text-ink-50">{value}</p>
+      <p className="mt-2 font-display text-3xl font-bold text-ink-50">
+        {numeric ? <AnimatedNumber value={value} decimals={decimals} prefix={prefix} suffix={suffix} /> : value}
+      </p>
       {sub && <p className="mt-1 text-xs text-ink-500">{sub}</p>}
-    </Card>
+    </motion.div>
   )
 }

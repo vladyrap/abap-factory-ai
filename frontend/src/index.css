@@ -6,14 +6,65 @@
   color-scheme: dark;
 }
 
+html, body, #root {
+  height: 100%;
+}
+
 body {
   margin: 0;
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background: #070b14;
+  color: #e2e8f0;
   -webkit-font-smoothing: antialiased;
 }
 
-/* Scrollbar estilo VS Code */
+@layer components {
+  /* Panel de vidrio (glassmorphism) */
+  .glass {
+    @apply border border-white/10 bg-white/[0.03] backdrop-blur-xl;
+  }
+  .glass-hover {
+    @apply transition hover:border-neon-400/30 hover:bg-white/[0.05];
+  }
+  /* Texto con degradado */
+  .text-gradient {
+    @apply bg-gradient-to-r from-neon-400 via-brand-400 to-plasma-400 bg-clip-text text-transparent;
+  }
+  /* Borde luminoso superior tipo HUD */
+  .hud-line {
+    @apply relative;
+  }
+  .hud-line::before {
+    content: '';
+    @apply pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-neon-400/60 to-transparent;
+  }
+}
+
+/* Fondo: grid técnico sutil */
+.tech-grid {
+  background-image:
+    linear-gradient(rgba(148, 163, 184, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 163, 184, 0.06) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 40%, transparent 100%);
+}
+
+/* Aurora blobs */
+.aurora-blob {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(80px);
+  opacity: 0.5;
+}
+
+/* Scrollbar estilo consola */
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #334155; border-radius: 5px; }
-::-webkit-scrollbar-thumb:hover { background: #475569; }
+::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 5px; border: 2px solid transparent; background-clip: content-box; }
+::-webkit-scrollbar-thumb:hover { background: #334155; background-clip: content-box; }
+
+/* Skeleton shimmer */
+.shimmer {
+  background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.10) 37%, rgba(255,255,255,0.04) 63%);
+  background-size: 200% 100%;
+}
