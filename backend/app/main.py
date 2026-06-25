@@ -22,12 +22,22 @@ if settings.ENV == "prod" and "change-me" in settings.SECRET_KEY:
 
 if not os.getenv("TESTING"):
     Base.metadata.create_all(bind=engine)
+    # Auto-migración aditiva: agrega columnas nuevas a tablas existentes sin recrear la BD
+    from app.core.schema_guard import ensure_columns
+    ensure_columns()
     from app.services import scheduler
     scheduler.start()
     from app.services.role_seed import ensure_system_roles
     ensure_system_roles()
     from app.services.agent_seed import ensure_system_agents
     ensure_system_agents()
+
+    # Avisos de configuración (no bloquean el arranque)
+    from app.services.ai.provider import any_enabled
+    if not any_enabled():
+        _log.warning("config: ningún proveedor de IA configurado (ANTHROPIC/OPENAI/GEMINI). Endpoints IA → 503.")
+    if settings.ENV == "prod" and any("localhost" in o for o in settings.CORS_ORIGINS):
+        _log.warning("config: CORS incluye localhost en producción. Revisa CORS_ORIGINS.")
 
 app = FastAPI(
     title=settings.PROJECT_NAME,

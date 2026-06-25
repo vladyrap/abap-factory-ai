@@ -180,6 +180,12 @@ bash deploy.sh                   # build + up + seed; Caddy emite TLS automátic
 > Si ninguna clave está configurada, los endpoints de IA responden **503** con un mensaje claro; el resto de la app (proyectos, historial, dashboard) funciona igual.
 
 ## Robustez y resiliencia
+- **Auto-migración aditiva de esquema** (`core/schema_guard.py`): al arrancar, agrega
+  columnas nuevas a tablas existentes (PostgreSQL/SQLite) sin recrear la BD ni perder datos.
+  Para cambios complejos (renombrar/borrar/tipos), usar Alembic.
+- **Healthcheck del backend** en Docker (Dockerfile + compose prod); el frontend espera a que
+  el backend esté `healthy`.
+- **Avisos de configuración** al iniciar (sin proveedor de IA, CORS con localhost en prod).
 - **Manejo global de errores**: respuestas JSON limpias (sin stack traces) para errores de BD,
   validación e inesperados; cada uno con `request_id` para trazabilidad.
 - **Logging con request-id** y tiempo por request (middleware).

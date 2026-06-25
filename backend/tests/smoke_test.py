@@ -246,6 +246,20 @@ au = c.get("/api/audit/", headers=admin_h)
 check("admin ve auditoría con registros", au.status_code == 200 and len(au.json()) > 0)
 check("consultor SIN audit.view => 403", c.get("/api/audit/", headers=cons_h).status_code == 403)
 
+print("\n== Robustez: auto-migración de esquema (schema_guard) ==")
+from sqlalchemy import MetaData, Table, Column as SACol, Integer as SAInt, String as SAStr, Boolean as SABool, create_engine as sa_create, inspect as sa_inspect
+from sqlalchemy.pool import StaticPool as SAStatic
+from app.core.schema_guard import ensure_columns
+ge = sa_create("sqlite://", connect_args={"check_same_thread": False}, poolclass=SAStatic)
+m1 = MetaData(); Table("widget", m1, SACol("id", SAInt, primary_key=True)); m1.create_all(ge)
+m2 = MetaData(); Table("widget", m2, SACol("id", SAInt, primary_key=True),
+                       SACol("nombre", SAStr(50)), SACol("activo", SABool, default=True))
+added = ensure_columns(ge, m2)
+gcols = {c["name"] for c in sa_inspect(ge).get_columns("widget")}
+check("schema_guard agrega columnas faltantes", "nombre" in gcols and "activo" in gcols)
+check("schema_guard reporta lo agregado", "widget.nombre" in added)
+check("schema_guard idempotente (2da vez no agrega)", ensure_columns(ge, m2) == [])
+
 print("\n== Agentes dinámicos (CRUD) ==")
 ag = c.get("/api/agents/", headers=cons_h)
 check("lista agentes >= 7", ag.status_code == 200 and len(ag.json()) >= 7)
