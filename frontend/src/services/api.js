@@ -16,14 +16,49 @@ function notifyOnce(msg) {
   if (now - _lastToast > 1500) { toast.error(msg); _lastToast = now }
 }
 
+// ─── Refresh de access token (single-flight) ────────────────────────────────
+let _refreshing = null
+function tryRefresh() {
+  const rt = localStorage.getItem('refresh_token')
+  if (!rt) return Promise.resolve(null)
+  if (!_refreshing) {
+    _refreshing = axios.post('/api/auth/refresh', { refresh_token: rt })
+      .then((r) => {
+        localStorage.setItem('token', r.data.access_token)
+        if (r.data.refresh_token) localStorage.setItem('refresh_token', r.data.refresh_token)
+        if (r.data.user) localStorage.setItem('user', JSON.stringify(r.data.user))
+        return r.data.access_token
+      })
+      .catch(() => null)
+      .finally(() => { _refreshing = null })
+  }
+  return _refreshing
+}
+
+function forceLogout() {
+  localStorage.removeItem('token')
+  localStorage.removeItem('refresh_token')
+  localStorage.removeItem('user')
+  if (!location.pathname.startsWith('/login')) window.location.href = '/login'
+}
+
 api.interceptors.response.use(
   (r) => r,
-  (err) => {
+  async (err) => {
     const status = err.response?.status
-    if (status === 401) {
-      localStorage.removeItem('token')
-      localStorage.removeItem('user')
-      if (!location.pathname.startsWith('/login')) window.location.href = '/login'
+    const original = err.config || {}
+    if (status === 401 && !original._retry && original.url && !original.url.includes('/auth/')) {
+      // Intentar refrescar el access token una vez y reintentar la petición.
+      original._retry = true
+      const newToken = await tryRefresh()
+      if (newToken) {
+        original.headers = original.headers || {}
+        original.headers.Authorization = `Bearer ${newToken}`
+        return api(original)
+      }
+      forceLogout()
+    } else if (status === 401 && original.url && !original.url.includes('/auth/login')) {
+      forceLogout()
     } else if (status === 429) {
       notifyOnce(err.response?.data?.detail || 'Límite de uso alcanzado. Intenta más tarde.')
     } else if (status === 503) {
@@ -41,8 +76,17 @@ api.interceptors.response.use(
 
 export const authApi = {
   login: (data) => api.post('/auth/login', data),
+  refresh: (refresh_token) => api.post('/auth/refresh', { refresh_token }),
   me: () => api.get('/auth/me'),
   createUser: (data) => api.post('/auth/users', data),
+  twofaStatus: () => api.get('/auth/2fa/status'),
+  twofaSetup: () => api.post('/auth/2fa/setup'),
+  twofaEnable: (otp) => api.post('/auth/2fa/enable', { otp }),
+  twofaDisable: (otp) => api.post('/auth/2fa/disable', { otp }),
+}
+
+export const auditApi = {
+  list: (limit = 200) => api.get('/audit/', { params: { limit } }),
 }
 
 export const catalogApi = {

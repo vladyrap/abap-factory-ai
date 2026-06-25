@@ -10,7 +10,9 @@ class Settings(BaseSettings):
 
     SECRET_KEY: str = "change-me-in-production-use-a-long-random-string"
     ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24  # 24h
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 8        # 8h — token de acceso (corto)
+    REFRESH_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 14  # 14 días — token de refresh
+    TOTP_ISSUER: str = "ABAP Factory AI"             # nombre que ve el authenticator (2FA)
 
     # PostgreSQL — puertos propios para no chocar con otros proyectos locales
     POSTGRES_USER: str = "postgres"

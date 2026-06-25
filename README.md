@@ -198,5 +198,11 @@ bash deploy.sh                   # build + up + seed; Caddy emite TLS automátic
 
 ## Seguridad
 - Claves de IA **solo** por variables de entorno (nunca en código).
-- JWT + bcrypt. Autorización por **permisos granulares** (backend `require_perm`, frontend `hasPerm`).
-- Cada llamada a IA se registra en `ai_usage` para auditoría y control de costos.
+- **JWT con access (8h) + refresh (14 días)**: el frontend refresca el access automáticamente;
+  los refresh tokens no autorizan endpoints (solo `/auth/refresh`). Configurable.
+- **2FA (TOTP)**: cada usuario activa verificación en dos pasos (Google Authenticator/Authy/…)
+  desde *Seguridad (2FA)* — QR + código manual. El login pide el código si está activo.
+- **Auditoría**: toda acción mutante queda registrada (usuario, acción, ruta, estado, IP, fecha)
+  en `audit_logs`; visible en *Auditoría* (permiso `audit.view`).
+- bcrypt + autorización por **permisos granulares** (backend `require_perm`, frontend `hasPerm`).
+- Cada llamada a IA se registra en `ai_usage` para control de costos.

@@ -30,9 +30,10 @@ export function AuthProvider({ children }) {
     }
   }, [])
 
-  const login = async (email, password) => {
-    const { data } = await authApi.login({ email, password })
+  const login = async (email, password, otp) => {
+    const { data } = await authApi.login({ email, password, otp: otp || undefined })
     localStorage.setItem('token', data.access_token)
+    if (data.refresh_token) localStorage.setItem('refresh_token', data.refresh_token)
     localStorage.setItem('user', JSON.stringify(data.user))
     setUser(data.user)
     return data.user
@@ -40,6 +41,7 @@ export function AuthProvider({ children }) {
 
   const logout = () => {
     localStorage.removeItem('token')
+    localStorage.removeItem('refresh_token')
     localStorage.removeItem('user')
     setUser(null)
   }

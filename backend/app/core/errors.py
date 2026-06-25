@@ -55,4 +55,14 @@ def register(app: FastAPI) -> None:
         if request.url.path not in ("/health", "/metrics"):
             logger.info("http", extra={"request_id": rid, "method": request.method,
                                        "path": request.url.path, "status": response.status_code, "ms": ms})
+        # Auditoría de acciones mutantes (no rompe el request si falla)
+        try:
+            from app.services.audit import record_request
+            record_request(
+                request.method, request.url.path, response.status_code,
+                request.headers.get("Authorization"), rid,
+                request.client.host if request.client else None,
+            )
+        except Exception:  # noqa: BLE001
+            pass
         return response

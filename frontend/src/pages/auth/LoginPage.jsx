@@ -12,6 +12,8 @@ export default function LoginPage() {
   const navigate = useNavigate()
   const [email, setEmail] = useState('admin@abapfactory.ai')
   const [password, setPassword] = useState('demo1234')
+  const [otp, setOtp] = useState('')
+  const [otpRequired, setOtpRequired] = useState(false)
   const [loading, setLoading] = useState(false)
 
   if (user) return <div />
@@ -20,10 +22,18 @@ export default function LoginPage() {
     e.preventDefault()
     setLoading(true)
     try {
-      await login(email, password)
+      await login(email, password, otp)
       navigate('/')
-    } catch {
-      toast.error('Credenciales inválidas')
+    } catch (err) {
+      const detail = err.response?.data?.detail
+      if (detail === 'otp_required') {
+        setOtpRequired(true)
+        toast('Ingresa el código de tu app de autenticación', { icon: '🔐' })
+      } else if (detail === 'otp_invalid') {
+        toast.error('Código 2FA inválido')
+      } else {
+        toast.error('Credenciales inválidas')
+      }
     } finally {
       setLoading(false)
     }
@@ -56,6 +66,10 @@ export default function LoginPage() {
         <form onSubmit={submit} className="space-y-4">
           <Input label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
           <Input label="Contraseña" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+          {otpRequired && (
+            <Input label="Código 2FA" inputMode="numeric" autoFocus value={otp}
+              onChange={(e) => setOtp(e.target.value)} placeholder="123456" className="font-mono tracking-widest" />
+          )}
           <Button type="submit" loading={loading} className="w-full animate-pulse-glow">Acceder a la consola</Button>
         </form>
 

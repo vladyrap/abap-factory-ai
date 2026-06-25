@@ -38,6 +38,7 @@ PERMISSIONS: list[dict] = [
     {"key": "users.manage", "label": "Administrar usuarios", "group": "Administración"},
     {"key": "roles.manage", "label": "Administrar roles", "group": "Administración"},
     {"key": "agents.manage", "label": "Configurar agentes IA", "group": "Administración"},
+    {"key": "audit.view", "label": "Ver auditoría", "group": "Administración"},
 ]
 
 ALL_KEYS = [p["key"] for p in PERMISSIONS]
@@ -52,7 +53,7 @@ _BUILDER = [
 
 LEGACY_ROLE_PERMS: dict[str, list[str]] = {
     "admin": ["*"],
-    "tech_lead": _BUILDER + ["code.approve", "costs.view"],
+    "tech_lead": _BUILDER + ["code.approve", "costs.view", "audit.view"],
     "consultant": list(_BUILDER),
     "qa": ["tests.generate", "protocol.generate", "dump.analyze", "inspect.run", "export.run", "code.read"],
     "client_readonly": ["export.run", "code.read"],

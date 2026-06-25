@@ -37,6 +37,10 @@ def override_db():
 
 app.dependency_overrides[get_db] = override_db
 
+# La auditoría abre su propia sesión (engine real en prod). En el test la apuntamos al SQLite.
+import app.services.audit as _audit_mod
+_audit_mod.SessionLocal = TestingSession
+
 # Seed mínimo: admin + consultor + qa
 seed = TestingSession()
 seed.add_all([
@@ -213,6 +217,34 @@ check("permisos efectivos del rol custom", set(lme.get("permissions", [])) == {"
 check("rol custom NO puede crear cliente (403)", c.post("/api/clients/", headers=low_h, json={"name": "Y"}).status_code == 403)
 # borrar rol del sistema bloqueado / rol en uso bloqueado
 check("no borra rol en uso (400)", c.delete(f"/api/roles/{new_role_id}", headers=admin_h).status_code == 400)
+
+print("\n== Tokens: refresh + tipos ==")
+lr = c.post("/api/auth/login", json={"email": "admin@x.io", "password": "pass1234"}).json()
+check("login devuelve refresh_token", bool(lr.get("refresh_token")))
+rf = c.post("/api/auth/refresh", json={"refresh_token": lr["refresh_token"]})
+check("refresh emite nuevo access", rf.status_code == 200 and rf.json().get("access_token"))
+new_access = rf.json()["access_token"]
+check("nuevo access funciona en /me", c.get("/api/auth/me", headers={"Authorization": f"Bearer {new_access}"}).status_code == 200)
+check("refresh token NO autoriza como access", c.get("/api/auth/me", headers={"Authorization": f"Bearer {lr['refresh_token']}"}).status_code == 401)
+
+print("\n== 2FA (TOTP) ==")
+import pyotp
+c.post("/api/auth/users", headers=admin_h, json={"email": "tf@x.io", "password": "pass1234", "first_name": "T", "last_name": "F"})
+tfh = {"Authorization": f"Bearer {token('tf@x.io')}"}
+su = c.post("/api/auth/2fa/setup", headers=tfh)
+check("2fa setup devuelve secreto", su.status_code == 200 and len(su.json()["secret"]) >= 16)
+secret = su.json()["secret"]
+en = c.post("/api/auth/2fa/enable", headers=tfh, json={"otp": pyotp.TOTP(secret).now()})
+check("2fa enable OK", en.status_code == 200 and en.json()["enabled"] is True)
+lo = c.post("/api/auth/login", json={"email": "tf@x.io", "password": "pass1234"})
+check("login sin OTP => 401 otp_required", lo.status_code == 401 and lo.json()["detail"] == "otp_required")
+lo2 = c.post("/api/auth/login", json={"email": "tf@x.io", "password": "pass1234", "otp": pyotp.TOTP(secret).now()})
+check("login con OTP correcto => 200", lo2.status_code == 200)
+
+print("\n== Auditoría ==")
+au = c.get("/api/audit/", headers=admin_h)
+check("admin ve auditoría con registros", au.status_code == 200 and len(au.json()) > 0)
+check("consultor SIN audit.view => 403", c.get("/api/audit/", headers=cons_h).status_code == 403)
 
 print("\n== IA sin API key => 503 limpio ==")
 r = c.post("/api/generation/code", headers=cons_h, json={"description": "x", "sap_context": {"sap_version": "ECC"}, "save": False})

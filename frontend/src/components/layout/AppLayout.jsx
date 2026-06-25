@@ -4,7 +4,7 @@ import { motion } from 'framer-motion'
 import {
   LayoutDashboard, FolderKanban, Wand2, Code2, Bug, ShieldCheck, Workflow, Brain,
   FlaskConical, ClipboardList, History, DollarSign, Users, Bot, LogOut, Cpu, FileText,
-  ArrowRightLeft, Tags, FileStack, GitBranch, Sparkles, ShieldHalf,
+  ArrowRightLeft, Tags, FileStack, GitBranch, Sparkles, ShieldHalf, ScrollText,
 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { useProject } from '../../context/ProjectContext'
@@ -34,6 +34,8 @@ const NAV = [
   { to: '/agents', label: 'Agentes IA', icon: Bot, perm: 'admin' },
   { to: '/admin', label: 'Usuarios', icon: Users, perm: 'admin' },
   { to: '/roles', label: 'Roles y permisos', icon: ShieldHalf, perm: 'roles' },
+  { to: '/audit', label: 'Auditoría', icon: ScrollText, perm: 'audit.view' },
+  { to: '/security', label: 'Seguridad (2FA)', icon: ShieldCheck },
 ]
 
 export default function AppLayout() {

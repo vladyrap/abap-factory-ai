@@ -28,6 +28,8 @@ import HistoryPage from './pages/HistoryPage'
 import CostsPage from './pages/costs/CostsPage'
 import AdminUsersPage from './pages/admin/AdminUsersPage'
 import RolesPage from './pages/roles/RolesPage'
+import SecurityPage from './pages/security/SecurityPage'
+import AuditPage from './pages/audit/AuditPage'
 import AgentsPage from './pages/agents/AgentsPage'
 
 function Protected({ children }) {
@@ -65,6 +67,8 @@ export default function App() {
           <Route path="agents" element={<AgentsPage />} />
           <Route path="admin" element={<AdminUsersPage />} />
           <Route path="roles" element={<RolesPage />} />
+          <Route path="security" element={<SecurityPage />} />
+          <Route path="audit" element={<AuditPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

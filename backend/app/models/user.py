@@ -25,5 +25,9 @@ class User(Base):
     role_id = Column(Integer, ForeignKey("roles.id"))  # rol dinámico (RBAC a bajo nivel)
     is_active = Column(Boolean, default=True)
 
+    # 2FA (TOTP)
+    totp_secret = Column(String(64))
+    totp_enabled = Column(Boolean, default=False)
+
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

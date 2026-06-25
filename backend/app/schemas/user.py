@@ -38,6 +38,7 @@ class UserResponse(UserBase):
 
 class Token(BaseModel):
     access_token: str
+    refresh_token: Optional[str] = None
     token_type: str = "bearer"
     user: UserResponse
 
@@ -45,3 +46,12 @@ class Token(BaseModel):
 class LoginRequest(BaseModel):
     email: EmailStr
     password: str
+    otp: Optional[str] = None     # código 2FA (TOTP) si el usuario lo tiene activado
+
+
+class RefreshRequest(BaseModel):
+    refresh_token: str
+
+
+class TwoFAVerify(BaseModel):
+    otp: str
