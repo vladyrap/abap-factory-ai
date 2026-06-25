@@ -4,64 +4,64 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Paleta enterprise SAP Fiori + consola sci-fi
-        brand: {
-          50: '#eff6ff', 100: '#dbeafe', 200: '#bfdbfe', 300: '#93c5fd',
-          400: '#60a5fa', 500: '#3b82f6', 600: '#2563eb', 700: '#1d4ed8',
-          800: '#1e40af', 900: '#1e3a5f',
+        // Paleta Visual Studio Code (Dark+)
+        vs: {
+          editor: '#1e1e1e',
+          sidebar: '#252526',
+          activity: '#333333',
+          input: '#3c3c3c',
+          widget: '#252526',
+          border: '#2d2d2d',
+          border2: '#454545',
+          tabactive: '#1e1e1e',
+          tabinactive: '#2d2d2d',
+          statusbar: '#007acc',
+          accent: '#007acc',
+          button: '#0e639c',
+          buttonHover: '#1177bb',
+          selection: '#094771',
+          hover: '#2a2d2e',
+          link: '#3794ff',
+          text: '#cccccc',
+          muted: '#858585',
+          green: '#4ec9b0',
+          yellow: '#cca700',
+          red: '#f14c4c',
+          purple: '#c586c0',
+          orange: '#ce9178',
         },
-        // Acento neón cian
-        neon: {
-          400: '#22d3ee', 500: '#06b6d4', 600: '#0891b2',
-        },
-        plasma: {
-          400: '#a855f7', 500: '#8b5cf6',
-        },
+        // 'ink' remapeado a los grises de VS Code (cascada a todas las pantallas)
         ink: {
-          50: '#f8fafc', 100: '#f1f5f9', 200: '#e2e8f0', 300: '#cbd5e1',
-          400: '#94a3b8', 500: '#64748b', 600: '#475569', 700: '#334155',
-          800: '#1e293b', 900: '#0f172a', 950: '#070b14',
+          50: '#ffffff', 100: '#e8e8e8', 200: '#cccccc', 300: '#bbbbbb',
+          400: '#858585', 500: '#6e6e6e', 600: '#454545', 700: '#3c3c3c',
+          800: '#2d2d2d', 900: '#252526', 950: '#1e1e1e',
         },
+        // 'brand' y 'neon' remapeados al azul de VS Code
+        brand: {
+          50: '#e6f1fb', 100: '#cfe6f8', 200: '#9fcdf0', 300: '#5aa6e0',
+          400: '#3794ff', 500: '#1177bb', 600: '#0e639c', 700: '#094771',
+          800: '#04395e', 900: '#042f4d',
+        },
+        neon: { 400: '#4fc1ff', 500: '#007acc', 600: '#0e639c' },
+        plasma: { 400: '#c586c0', 500: '#b66ab0' },
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
-        display: ['"Space Grotesk"', 'Inter', 'sans-serif'],
-        mono: ['"JetBrains Mono"', 'Consolas', 'monospace'],
+        sans: ['"Segoe UI"', 'system-ui', 'Roboto', 'sans-serif'],
+        display: ['"Segoe UI"', 'system-ui', 'sans-serif'],
+        mono: ['"JetBrains Mono"', 'Consolas', '"Courier New"', 'monospace'],
       },
       boxShadow: {
-        glow: '0 0 0 1px rgba(34,211,238,0.18), 0 0 24px -4px rgba(34,211,238,0.35)',
-        'glow-brand': '0 0 0 1px rgba(37,99,235,0.25), 0 0 28px -6px rgba(59,130,246,0.5)',
-        card: '0 1px 0 0 rgba(255,255,255,0.04) inset, 0 18px 40px -24px rgba(0,0,0,0.8)',
+        glow: '0 2px 8px rgba(0,0,0,0.35)',
+        'glow-brand': '0 2px 8px rgba(0,0,0,0.4)',
+        card: '0 2px 6px rgba(0,0,0,0.3)',
       },
       keyframes: {
-        aurora: {
-          '0%,100%': { transform: 'translate(0,0) scale(1)', opacity: '0.6' },
-          '50%': { transform: 'translate(6%,4%) scale(1.15)', opacity: '0.9' },
-        },
-        floaty: {
-          '0%,100%': { transform: 'translateY(0)' },
-          '50%': { transform: 'translateY(-8px)' },
-        },
-        shimmer: {
-          '0%': { backgroundPosition: '-200% 0' },
-          '100%': { backgroundPosition: '200% 0' },
-        },
-        scan: {
-          '0%': { transform: 'translateY(-100%)' },
-          '100%': { transform: 'translateY(100%)' },
-        },
-        pulseGlow: {
-          '0%,100%': { boxShadow: '0 0 0 0 rgba(34,211,238,0.35)' },
-          '50%': { boxShadow: '0 0 22px 4px rgba(34,211,238,0.18)' },
-        },
+        spinx: { '0%': { transform: 'rotate(0)' }, '100%': { transform: 'rotate(360deg)' } },
       },
       animation: {
-        aurora: 'aurora 14s ease-in-out infinite',
-        'aurora-slow': 'aurora 22s ease-in-out infinite',
-        floaty: 'floaty 6s ease-in-out infinite',
-        shimmer: 'shimmer 2.2s linear infinite',
-        scan: 'scan 4s linear infinite',
-        'pulse-glow': 'pulseGlow 3s ease-in-out infinite',
+        'pulse-glow': 'none',
+        aurora: 'none',
+        'aurora-slow': 'none',
       },
     },
   },

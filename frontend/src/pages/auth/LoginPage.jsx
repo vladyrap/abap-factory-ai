@@ -1,11 +1,9 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
 import { Cpu, Terminal } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useAuth } from '../../context/AuthContext'
 import { Button, Input } from '../../components/ui/primitives'
-import TechBackground from '../../components/TechBackground'
 
 export default function LoginPage() {
   const { login, user } = useAuth()
@@ -42,44 +40,47 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center p-4">
-      <TechBackground dense />
+    <div className="flex min-h-screen flex-col bg-vs-editor text-ink-200">
+      {/* Title bar */}
+      <div className="flex h-8 shrink-0 items-center justify-between border-b border-vs-border bg-vs-sidebar px-3 text-xs text-vs-muted">
+        <span className="flex items-center gap-2"><Cpu className="h-3.5 w-3.5 text-vs-link" /> ABAP Factory AI — Iniciar sesión</span>
+        <div className="flex items-center gap-1.5">
+          <span className="h-3 w-3 rounded-full bg-[#febc2e]" />
+          <span className="h-3 w-3 rounded-full bg-[#28c840]" />
+          <span className="h-3 w-3 rounded-full bg-[#ff5f57]" />
+        </div>
+      </div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 24, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ duration: 0.5, ease: 'easeOut' }}
-        className="glass hud-line w-full max-w-md overflow-hidden rounded-3xl p-8 shadow-glow-brand"
-      >
-        <div className="mb-8 flex items-center gap-4">
-          <motion.div
-            animate={{ rotate: [0, 6, -6, 0] }} transition={{ duration: 6, repeat: Infinity }}
-            className="flex h-14 w-14 items-center justify-center rounded-2xl border border-neon-400/30 bg-gradient-to-br from-brand-600/30 to-neon-500/20 shadow-glow"
-          >
-            <Cpu className="h-7 w-7 text-neon-400" />
-          </motion.div>
-          <div>
-            <h1 className="font-display text-2xl font-bold tracking-tight text-gradient">ABAP Factory AI</h1>
-            <p className="flex items-center gap-1.5 text-sm text-ink-400">
-              <Terminal className="h-3.5 w-3.5" /> Desarrollo ABAP asistido por IA
-            </p>
+      <div className="flex flex-1 items-center justify-center p-4">
+        <div className="w-full max-w-sm rounded-[4px] border border-vs-border bg-vs-sidebar p-6">
+          <div className="mb-6 flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-[4px] border border-vs-border2 bg-vs-editor">
+              <Cpu className="h-6 w-6 text-vs-link" strokeWidth={1.5} />
+            </div>
+            <div>
+              <h1 className="text-base font-semibold text-ink-100">ABAP Factory AI</h1>
+              <p className="flex items-center gap-1.5 text-xs text-vs-muted">
+                <Terminal className="h-3 w-3" /> Desarrollo ABAP asistido por IA
+              </p>
+            </div>
+          </div>
+
+          <form onSubmit={submit} className="space-y-3">
+            <Input label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+            <Input label="Contraseña" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+            {otpRequired && (
+              <Input label="Código 2FA" inputMode="numeric" autoFocus value={otp}
+                onChange={(e) => setOtp(e.target.value)} placeholder="123456" className="font-mono tracking-widest" />
+            )}
+            <Button type="submit" loading={loading} className="w-full">Iniciar sesión</Button>
+          </form>
+
+          <div className="mt-5 flex items-center justify-between border-t border-vs-border pt-3 font-mono text-[11px] text-vs-muted">
+            <span>demo: admin@abapfactory.ai / demo1234</span>
+            <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-vs-green" /> online</span>
           </div>
         </div>
-
-        <form onSubmit={submit} className="space-y-4">
-          <Input label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-          <Input label="Contraseña" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
-          {otpRequired && (
-            <Input label="Código 2FA" inputMode="numeric" autoFocus value={otp}
-              onChange={(e) => setOtp(e.target.value)} placeholder="123456" className="font-mono tracking-widest" />
-          )}
-          <Button type="submit" loading={loading} className="w-full animate-pulse-glow">Acceder a la consola</Button>
-        </form>
-
-        <div className="mt-6 flex items-center justify-between font-mono text-[11px] text-ink-500">
-          <span>demo: admin@abapfactory.ai / demo1234</span>
-          <span className="flex items-center gap-1.5"><span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" /> online</span>
-        </div>
-      </motion.div>
+      </div>
     </div>
   )
 }
