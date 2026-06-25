@@ -254,6 +254,8 @@ class EditorRequest(BaseModel):
 
 # ─── Agentes ─────────────────────────────────────────────────────────────────
 class AgentConfigUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
     provider: Optional[str] = None
     model: Optional[str] = None
     temperature: Optional[float] = None

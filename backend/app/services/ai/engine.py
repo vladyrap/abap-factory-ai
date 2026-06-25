@@ -48,24 +48,25 @@ def _check_cost_limit(db: Session, user_id: int | None) -> None:
         )
 
 
-def _effective_config(db: Session, agent: Agent) -> tuple[str, str | None, float, int, str]:
-    """Devuelve (provider, model, temperature, max_tokens, system_prompt) efectivos."""
-    cfg = db.query(AgentConfig).filter(AgentConfig.agent_key == agent.key).first()
-    if cfg and cfg.is_active:
-        return (
-            cfg.provider or agent.default_provider,
-            cfg.model or agent.default_model,
-            cfg.temperature if cfg.temperature is not None else agent.default_temperature,
-            cfg.max_tokens or agent.default_max_tokens,
-            cfg.system_prompt or agent.system_prompt,
-        )
-    return (
-        agent.default_provider,
-        agent.default_model,
-        agent.default_temperature,
-        agent.default_max_tokens,
-        agent.system_prompt,
-    )
+def _effective_config(db: Session, agent_key: str) -> tuple[str, str | None, float, int, str]:
+    """Resuelve la config efectiva: BD (AgentConfig) primero, luego catálogo en código.
+
+    Soporta agentes 100% dinámicos (creados en BD con key propio, sin entrada en código).
+    """
+    cfg = db.query(AgentConfig).filter(AgentConfig.agent_key == agent_key).first()
+    code = AGENTS.get(agent_key)  # puede ser None para agentes personalizados
+
+    if cfg:
+        prov = cfg.provider or (code.default_provider if code else "claude")
+        model = cfg.model or (code.default_model if code else None)
+        temp = cfg.temperature if cfg.temperature is not None else (code.default_temperature if code else 0.2)
+        mx = cfg.max_tokens or (code.default_max_tokens if code else 4000)
+        sys = cfg.system_prompt or (code.system_prompt if code else "")
+        return prov, model, temp, mx, sys
+
+    agent = code or get_agent(agent_key)  # fallback a abap_ecc si no existe
+    return (agent.default_provider, agent.default_model, agent.default_temperature,
+            agent.default_max_tokens, agent.system_prompt)
 
 
 def run_agent(
@@ -88,8 +89,7 @@ def run_agent(
 
     _check_cost_limit(db, user_id)
 
-    agent = get_agent(agent_key)
-    provider_name, model, temperature, max_tokens, system_prompt = _effective_config(db, agent)
+    provider_name, model, temperature, max_tokens, system_prompt = _effective_config(db, agent_key)
     provider_name = provider_override or provider_name
     model = model_override or model
 

@@ -205,7 +205,9 @@ export const costsApi = {
 export const agentsApi = {
   list: () => api.get('/agents/'),
   providersStatus: () => api.get('/agents/providers/status'),
+  create: (data) => api.post('/agents/', data),
   update: (key, data) => api.put(`/agents/${key}`, data),
+  remove: (key) => api.delete(`/agents/${key}`),
 }
 
 export const adminApi = {

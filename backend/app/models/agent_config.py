@@ -22,5 +22,6 @@ class AgentConfig(Base):
     system_prompt = Column(Text)
 
     is_active = Column(Boolean, default=True)
+    is_system = Column(Boolean, default=False)   # agentes base (no se pueden eliminar)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

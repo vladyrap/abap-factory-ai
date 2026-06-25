@@ -26,6 +26,8 @@ if not os.getenv("TESTING"):
     scheduler.start()
     from app.services.role_seed import ensure_system_roles
     ensure_system_roles()
+    from app.services.agent_seed import ensure_system_agents
+    ensure_system_agents()
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
