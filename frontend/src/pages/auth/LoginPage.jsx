@@ -31,6 +31,8 @@ export default function LoginPage() {
         toast('Ingresa el código de tu app de autenticación', { icon: '🔐' })
       } else if (detail === 'otp_invalid') {
         toast.error('Código 2FA inválido')
+      } else if (err.response?.status === 429) {
+        toast.error(detail || 'Demasiados intentos. Espera unos minutos.')
       } else {
         toast.error('Credenciales inválidas')
       }

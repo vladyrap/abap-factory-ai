@@ -246,6 +246,11 @@ au = c.get("/api/audit/", headers=admin_h)
 check("admin ve auditoría con registros", au.status_code == 200 and len(au.json()) > 0)
 check("consultor SIN audit.view => 403", c.get("/api/audit/", headers=cons_h).status_code == 403)
 
+print("\n== Rate limiting del login ==")
+codes = [c.post("/api/auth/login", json={"email": "brute@x.io", "password": "bad"}).status_code for _ in range(12)]
+check("primeros intentos => 401", codes[0] == 401)
+check("se bloquea con 429 tras el límite", 429 in codes)
+
 print("\n== IA sin API key => 503 limpio ==")
 r = c.post("/api/generation/code", headers=cons_h, json={"description": "x", "sap_context": {"sap_version": "ECC"}, "save": False})
 check("generate sin key 503", r.status_code == 503)

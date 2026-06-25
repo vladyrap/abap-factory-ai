@@ -205,4 +205,16 @@ bash deploy.sh                   # build + up + seed; Caddy emite TLS automátic
 - **Auditoría**: toda acción mutante queda registrada (usuario, acción, ruta, estado, IP, fecha)
   en `audit_logs`; visible en *Auditoría* (permiso `audit.view`).
 - bcrypt + autorización por **permisos granulares** (backend `require_perm`, frontend `hasPerm`).
+- **Rate limiting del login** (anti fuerza bruta): por IP+email, configurable
+  (`LOGIN_RATE_MAX`, `LOGIN_RATE_WINDOW_SEC`); responde **429** al superar el límite.
 - Cada llamada a IA se registra en `ai_usage` para control de costos.
+
+## CI (GitHub Actions)
+`.github/workflows/ci.yml` corre en cada push/PR: **smoke test** del backend (TestClient+SQLite)
+y **build** del frontend. Sin necesidad de Postgres en CI.
+
+## Backups de la base de datos
+- `bash scripts/backup.sh` → dump comprimido con fecha en `backups/` + rotación (14 días por defecto).
+- Programar en cron (VPS): `0 3 * * * cd /opt/abap-factory-ai && bash scripts/backup.sh >> backups/backup.log 2>&1`
+- Restaurar: `bash scripts/restore.sh backups/abap_factory_YYYYmmdd_HHMMSS.sql.gz` (pide confirmación).
+- La carpeta `backups/` está en `.gitignore` (los dumps no se versionan).

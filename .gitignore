@@ -21,3 +21,7 @@ frontend/.env
 .DS_Store
 .idea/
 .vscode/
+
+# Backups de BD (no versionar dumps)
+backups/
+

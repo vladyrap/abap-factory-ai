@@ -1,7 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.core.database import get_db
+from app.core import ratelimit
 from app.core.security import (
     verify_password, get_password_hash, create_access_token, create_refresh_token, decode_token,
 )
@@ -33,7 +34,14 @@ def _verify_totp(secret: str, otp: str) -> bool:
 
 
 @router.post("/login", response_model=Token)
-def login(credentials: LoginRequest, db: Session = Depends(get_db)):
+def login(credentials: LoginRequest, request: Request, db: Session = Depends(get_db)):
+    # Rate limiting anti fuerza bruta (por IP + email)
+    ip = request.client.host if request.client else "?"
+    rl_key = f"login:{ip}:{credentials.email.lower()}"
+    if not ratelimit.check_and_hit(rl_key, settings.LOGIN_RATE_MAX, settings.LOGIN_RATE_WINDOW_SEC):
+        raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                            detail="Demasiados intentos de inicio de sesión. Espera unos minutos.")
+
     user = db.query(User).filter(User.email == credentials.email).first()
     if not user or not verify_password(credentials.password, user.password_hash):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Credenciales inválidas")
@@ -45,6 +53,8 @@ def login(credentials: LoginRequest, db: Session = Depends(get_db)):
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="otp_required")
         if not _verify_totp(user.totp_secret, credentials.otp):
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="otp_invalid")
+
+    ratelimit.reset(rl_key)  # login correcto: limpia el contador
     t = _tokens(user)
     return Token(access_token=t["access_token"], refresh_token=t["refresh_token"], user=_with_perms(db, user))
 

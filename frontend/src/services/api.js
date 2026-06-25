@@ -59,7 +59,7 @@ api.interceptors.response.use(
       forceLogout()
     } else if (status === 401 && original.url && !original.url.includes('/auth/login')) {
       forceLogout()
-    } else if (status === 429) {
+    } else if (status === 429 && !(original.url && original.url.includes('/auth/login'))) {
       notifyOnce(err.response?.data?.detail || 'Límite de uso alcanzado. Intenta más tarde.')
     } else if (status === 503) {
       // Servicio IA no configurado/temporal: lo maneja cada pantalla; no spamear toast global.

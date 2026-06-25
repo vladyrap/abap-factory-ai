@@ -33,6 +33,10 @@ class Settings(BaseSettings):
     MAX_INPUT_CHARS: int = 60000        # tope de tamaño de código/dump pegado
     DAILY_AI_COST_LIMIT_USD: float = 0  # 0 = sin límite; si >0, corta al superarlo por usuario/día
 
+    # Rate limiting del login (anti fuerza bruta) — por IP+email
+    LOGIN_RATE_MAX: int = 10            # intentos fallidos permitidos
+    LOGIN_RATE_WINDOW_SEC: int = 900    # ventana (15 min)
+
     # ─── IA — claves por entorno, NUNCA hardcode ────────────────────────────
     # Proveedor por defecto cuando un agente no especifica uno: "claude" | "openai"
     DEFAULT_AI_PROVIDER: str = "claude"
