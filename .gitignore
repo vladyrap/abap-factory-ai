@@ -25,3 +25,10 @@ frontend/.env
 # Backups de BD (no versionar dumps)
 backups/
 
+# Artefactos locales de desarrollo
+*.db
+*.log
+backend/dev.db
+backend/*.log
+frontend/*.log
+

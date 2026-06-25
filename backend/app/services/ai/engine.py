@@ -94,12 +94,16 @@ def run_agent(
     model = model_override or model
 
     provider = get_provider(provider_name)
-    # Si el proveedor elegido no tiene key, caer al otro que sí la tenga.
+    # Si el proveedor elegido no tiene key, caer a cualquiera habilitado
+    # (priorizando el DEFAULT_AI_PROVIDER configurado).
     if not provider.is_enabled():
-        fallback = "openai" if provider_name == "claude" else "claude"
-        provider = get_provider(fallback)
-        provider_name = provider.name
-        model = None  # usar default del proveedor de fallback
+        for cand in [settings.DEFAULT_AI_PROVIDER, "gemini", "claude", "openai"]:
+            p = get_provider(cand)
+            if p.is_enabled():
+                provider = p
+                provider_name = p.name
+                model = None  # usar el modelo por defecto del proveedor de fallback
+                break
 
     system = system_prompt + (("\n\n" + extra_system) if extra_system else "")
     result = provider.complete(

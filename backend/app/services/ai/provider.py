@@ -134,9 +134,39 @@ class OpenAIProvider(LLMProvider):
         )
 
 
+class GeminiProvider(LLMProvider):
+    name = "gemini"
+
+    def is_enabled(self) -> bool:
+        return bool(settings.GEMINI_API_KEY)
+
+    def complete(self, system, user_prompt, model=None, temperature=0.2, max_tokens=4000) -> LLMResult:
+        from google import genai          # import perezoso
+        from google.genai import types as gtypes
+        model = model or settings.GEMINI_DEFAULT_MODEL
+        client = genai.Client(api_key=settings.GEMINI_API_KEY)
+        config = gtypes.GenerateContentConfig(
+            system_instruction=system, temperature=temperature, max_output_tokens=max_tokens,
+        )
+        t0 = time.time()
+        resp = _with_retries(
+            lambda: client.models.generate_content(model=model, contents=user_prompt, config=config),
+            label="gemini",
+        )
+        latency = int((time.time() - t0) * 1000)
+        usage = getattr(resp, "usage_metadata", None)
+        return LLMResult(
+            text=resp.text or "",
+            tokens_in=getattr(usage, "prompt_token_count", 0) or 0,
+            tokens_out=getattr(usage, "candidates_token_count", 0) or 0,
+            model=model, provider=self.name, latency_ms=latency,
+        )
+
+
 _PROVIDERS: dict[str, LLMProvider] = {
     "claude": ClaudeProvider(),
     "openai": OpenAIProvider(),
+    "gemini": GeminiProvider(),
 }
 
 

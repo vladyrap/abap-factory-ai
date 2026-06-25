@@ -15,6 +15,10 @@ PRICING: dict[str, tuple[float, float]] = {
     "gpt-4o": (2.5, 10.0),
     "gpt-4o-mini": (0.15, 0.60),
     "gpt-4.1": (2.0, 8.0),
+    # Google Gemini (capa gratuita en AI Studio → costo 0 a efectos de reporte)
+    "gemini-2.0-flash": (0.0, 0.0),
+    "gemini-2.5-flash": (0.0, 0.0),
+    "gemini-1.5-flash": (0.0, 0.0),
 }
 
 _DEFAULT = (3.0, 15.0)  # fallback si el modelo no está en la tabla

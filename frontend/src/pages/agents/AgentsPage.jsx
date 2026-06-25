@@ -35,6 +35,7 @@ export default function AgentsPage() {
         <div className="flex gap-2">
           <ProviderBadge name="Claude" ok={providers.claude} />
           <ProviderBadge name="OpenAI" ok={providers.openai} />
+          <ProviderBadge name="Gemini" ok={providers.gemini} />
         </div>
       </div>
 
@@ -63,7 +64,7 @@ export default function AgentsPage() {
             <div className="space-y-3 p-5">
               <div className="grid grid-cols-2 gap-3">
                 <Select label="Proveedor" value={edit.provider} onChange={(e) => setEdit({ ...edit, provider: e.target.value })}
-                  options={[{ value: 'claude', label: 'Claude (Anthropic)' }, { value: 'openai', label: 'OpenAI' }]} />
+                  options={[{ value: 'claude', label: 'Claude (Anthropic)' }, { value: 'openai', label: 'OpenAI' }, { value: 'gemini', label: 'Gemini (Google · gratis)' }]} />
                 <Input label="Modelo" value={edit.model} onChange={(e) => setEdit({ ...edit, model: e.target.value })} />
                 <Input label="Temperatura" type="number" step="0.1" value={edit.temperature} onChange={(e) => setEdit({ ...edit, temperature: e.target.value })} />
                 <Input label="Max tokens" type="number" value={edit.max_tokens} onChange={(e) => setEdit({ ...edit, max_tokens: e.target.value })} />

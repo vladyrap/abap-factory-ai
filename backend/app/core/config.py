@@ -21,6 +21,10 @@ class Settings(BaseSettings):
     POSTGRES_HOST: str = "localhost"
     POSTGRES_PORT: int = 6602
 
+    # Override directo de la URL (p.ej. para desarrollo local con SQLite sin Docker:
+    # DATABASE_URL_OVERRIDE=sqlite:///./dev.db). Si está vacío, se arma desde POSTGRES_*.
+    DATABASE_URL_OVERRIDE: Optional[str] = None
+
     CORS_ORIGINS: List[str] = ["http://localhost:6600", "http://localhost:5173"]
 
     LOG_LEVEL: str = "INFO"
@@ -43,16 +47,20 @@ class Settings(BaseSettings):
 
     ANTHROPIC_API_KEY: Optional[str] = None
     OPENAI_API_KEY: Optional[str] = None
+    GEMINI_API_KEY: Optional[str] = None   # Google AI Studio — tiene capa GRATIS
 
     # Modelos por defecto de cada proveedor
     CLAUDE_DEFAULT_MODEL: str = "claude-opus-4-8"
     OPENAI_DEFAULT_MODEL: str = "gpt-4o"
+    GEMINI_DEFAULT_MODEL: str = "gemini-2.0-flash"
 
     # Tipo de cambio USD→CLP para reportar costos (configurable / actualizable)
     USD_TO_CLP: float = 950.0
 
     @property
     def DATABASE_URL(self) -> str:
+        if self.DATABASE_URL_OVERRIDE:
+            return self.DATABASE_URL_OVERRIDE
         return (
             f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
             f"@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"

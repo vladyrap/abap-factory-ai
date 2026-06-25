@@ -38,6 +38,7 @@ def providers_status():
     return {
         "claude": get_provider("claude").is_enabled(),
         "openai": get_provider("openai").is_enabled(),
+        "gemini": get_provider("gemini").is_enabled(),
     }
 
 
