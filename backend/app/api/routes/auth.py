@@ -21,7 +21,7 @@ def _with_perms(db: Session, user: User) -> User:
 
 
 def _tokens(user: User) -> dict:
-    claims = {"sub": str(user.id), "role": user.role.value}
+    claims = {"sub": str(user.id), "role": user.role.value, "tv": user.token_version or 1}
     return {"access_token": create_access_token(claims), "refresh_token": create_refresh_token(claims)}
 
 
@@ -67,8 +67,19 @@ def refresh(data: RefreshRequest, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.id == payload.get("sub")).first()
     if not user or not user.is_active:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Usuario no encontrado")
+    tv = payload.get("tv")
+    if tv is not None and tv != (user.token_version or 1):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Sesión expirada")
     t = _tokens(user)
     return Token(access_token=t["access_token"], refresh_token=t["refresh_token"], user=_with_perms(db, user))
+
+
+@router.post("/logout-all")
+def logout_all(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """Invalida todas las sesiones del usuario (sube su token_version)."""
+    current_user.token_version = (current_user.token_version or 1) + 1
+    db.commit()
+    return {"ok": True}
 
 
 @router.get("/me", response_model=UserResponse)

@@ -89,6 +89,12 @@ export const auditApi = {
   list: (limit = 200) => api.get('/audit/', { params: { limit } }),
 }
 
+export const aiSettingsApi = {
+  get: () => api.get('/admin/ai-settings/'),
+  update: (data) => api.put('/admin/ai-settings/', data),
+  test: (provider) => api.post(`/admin/ai-settings/test/${provider}`),
+}
+
 export const catalogApi = {
   get: () => api.get('/catalog/'),
 }

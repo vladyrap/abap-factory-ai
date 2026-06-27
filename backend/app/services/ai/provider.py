@@ -11,6 +11,7 @@ from dataclasses import dataclass
 from typing import Optional, Callable
 
 from app.core.config import settings
+from app.services.ai import credentials
 
 logger = logging.getLogger(__name__)
 
@@ -74,12 +75,12 @@ class ClaudeProvider(LLMProvider):
     name = "claude"
 
     def is_enabled(self) -> bool:
-        return bool(settings.ANTHROPIC_API_KEY)
+        return bool(credentials.get_key("anthropic"))
 
     def complete(self, system, user_prompt, model=None, temperature=0.2, max_tokens=4000) -> LLMResult:
         import anthropic  # import perezoso: solo si se usa
         model = model or settings.CLAUDE_DEFAULT_MODEL
-        client = anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY,
+        client = anthropic.Anthropic(api_key=credentials.get_key("anthropic"),
                                      timeout=settings.AI_TIMEOUT_SECONDS)
         t0 = time.time()
         resp = _with_retries(lambda: client.messages.create(
@@ -105,12 +106,12 @@ class OpenAIProvider(LLMProvider):
     name = "openai"
 
     def is_enabled(self) -> bool:
-        return bool(settings.OPENAI_API_KEY)
+        return bool(credentials.get_key("openai"))
 
     def complete(self, system, user_prompt, model=None, temperature=0.2, max_tokens=4000) -> LLMResult:
         from openai import OpenAI  # import perezoso
         model = model or settings.OPENAI_DEFAULT_MODEL
-        client = OpenAI(api_key=settings.OPENAI_API_KEY, timeout=settings.AI_TIMEOUT_SECONDS)
+        client = OpenAI(api_key=credentials.get_key("openai"), timeout=settings.AI_TIMEOUT_SECONDS)
         t0 = time.time()
         resp = _with_retries(lambda: client.chat.completions.create(
             model=model,
@@ -138,13 +139,13 @@ class GeminiProvider(LLMProvider):
     name = "gemini"
 
     def is_enabled(self) -> bool:
-        return bool(settings.GEMINI_API_KEY)
+        return bool(credentials.get_key("gemini"))
 
     def complete(self, system, user_prompt, model=None, temperature=0.2, max_tokens=4000) -> LLMResult:
         from google import genai          # import perezoso
         from google.genai import types as gtypes
         model = model or settings.GEMINI_DEFAULT_MODEL
-        client = genai.Client(api_key=settings.GEMINI_API_KEY)
+        client = genai.Client(api_key=credentials.get_key("gemini"))
         config = gtypes.GenerateContentConfig(
             system_instruction=system, temperature=temperature, max_output_tokens=max_tokens,
         )
@@ -171,8 +172,8 @@ _PROVIDERS: dict[str, LLMProvider] = {
 
 
 def get_provider(name: Optional[str] = None) -> LLMProvider:
-    """Devuelve el proveedor solicitado, o el DEFAULT_AI_PROVIDER si no se especifica."""
-    key = (name or settings.DEFAULT_AI_PROVIDER).lower()
+    """Devuelve el proveedor solicitado, o el default configurado si no se especifica."""
+    key = (name or credentials.default_provider()).lower()
     return _PROVIDERS.get(key, _PROVIDERS["claude"])
 
 

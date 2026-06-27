@@ -8,7 +8,7 @@ import app.models  # noqa: F401 — registra todos los modelos en Base.metadata
 from app.api.routes import (
     auth, admin, clients, projects, catalog, generation, dumps, inspector,
     tests, dashboard, costs, agents, exports, jobs, recipes, knowledge,
-    migration, naming, dev_docs, connections, solution, roles, audit,
+    migration, naming, dev_docs, connections, solution, roles, audit, ai_settings,
 )
 
 setup_logging()
@@ -21,6 +21,9 @@ if settings.ENV == "prod" and "change-me" in settings.SECRET_KEY:
     raise RuntimeError("SECRET_KEY por defecto en producción. Define una SECRET_KEY robusta en .env.prod.")
 
 if not os.getenv("TESTING"):
+    # Espera a que la BD esté lista (evita crash si Postgres aún arranca)
+    from app.core.db_wait import wait_for_db
+    wait_for_db(engine)
     Base.metadata.create_all(bind=engine)
     # Auto-migración aditiva: agrega columnas nuevas a tablas existentes sin recrear la BD
     from app.core.schema_guard import ensure_columns
@@ -61,7 +64,7 @@ register_errors(app)
 
 for r in (auth, admin, clients, projects, catalog, generation, dumps, inspector,
           tests, dashboard, costs, agents, exports, jobs, recipes, knowledge,
-          migration, naming, dev_docs, connections, solution, roles, audit):
+          migration, naming, dev_docs, connections, solution, roles, audit, ai_settings):
     app.include_router(r.router, prefix=settings.API_PREFIX)
 
 

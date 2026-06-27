@@ -4,7 +4,7 @@ import {
   LayoutDashboard, FolderKanban, Wand2, Code2, Bug, ShieldCheck, Workflow, Brain,
   FlaskConical, ClipboardList, History, DollarSign, Users, Bot, LogOut, Cpu, FileText,
   ArrowRightLeft, Tags, FileStack, GitBranch, Sparkles, ShieldHalf, ScrollText,
-  Files, Settings, GitFork, Circle,
+  Files, Settings, GitFork, Circle, KeyRound,
 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { useProject } from '../../context/ProjectContext'
@@ -31,6 +31,7 @@ const NAV = [
   { to: '/history', label: 'Historial', icon: History },
   { to: '/costs', label: 'Costos IA', icon: DollarSign, perm: 'costs' },
   { to: '/agents', label: 'Agentes IA', icon: Bot, perm: 'admin' },
+  { to: '/ai-credentials', label: 'Credenciales IA', icon: KeyRound, perm: 'agents.manage' },
   { to: '/admin', label: 'Usuarios', icon: Users, perm: 'admin' },
   { to: '/roles', label: 'Roles y permisos', icon: ShieldHalf, perm: 'roles' },
   { to: '/audit', label: 'Auditoría', icon: ScrollText, perm: 'audit.view' },

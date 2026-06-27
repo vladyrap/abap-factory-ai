@@ -27,6 +27,7 @@ import ProtocolsPage from './pages/protocols/ProtocolsPage'
 import HistoryPage from './pages/HistoryPage'
 import CostsPage from './pages/costs/CostsPage'
 import AdminUsersPage from './pages/admin/AdminUsersPage'
+import AiCredentialsPage from './pages/admin/AiCredentialsPage'
 import RolesPage from './pages/roles/RolesPage'
 import SecurityPage from './pages/security/SecurityPage'
 import AuditPage from './pages/audit/AuditPage'
@@ -65,6 +66,7 @@ export default function App() {
           <Route path="history" element={<HistoryPage />} />
           <Route path="costs" element={<CostsPage />} />
           <Route path="agents" element={<AgentsPage />} />
+          <Route path="ai-credentials" element={<AiCredentialsPage />} />
           <Route path="admin" element={<AdminUsersPage />} />
           <Route path="roles" element={<RolesPage />} />
           <Route path="security" element={<SecurityPage />} />

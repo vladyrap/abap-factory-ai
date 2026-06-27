@@ -20,6 +20,7 @@ from app.models.dev_document import DevDocument
 from app.models.sap_connection import SapConnection
 from app.models.role import Role
 from app.models.audit_log import AuditLog
+from app.models.app_setting import AppSetting
 
 __all__ = [
     "User", "UserRole", "Client", "Project", "Requirement", "TechSpec",
@@ -27,5 +28,5 @@ __all__ = [
     "TestSuite", "TestProtocol", "PROTOCOL_TYPES", "AIUsage", "AgentConfig",
     "Job", "JOB_TYPES", "ClientKnowledge", "KNOWLEDGE_KINDS",
     "NamingRule", "NAMING_OBJECT_TYPES", "Migration", "DevDocument", "SapConnection",
-    "Role", "AuditLog",
+    "Role", "AuditLog", "AppSetting",
 ]

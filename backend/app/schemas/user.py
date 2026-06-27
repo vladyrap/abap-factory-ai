@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Optional
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 from app.models.user import UserRole
 
 
@@ -11,7 +11,7 @@ class UserBase(BaseModel):
 
 
 class UserCreate(UserBase):
-    password: str
+    password: str = Field(min_length=8)   # política mínima de contraseña
     role: UserRole = UserRole.consultant
 
 
@@ -21,7 +21,7 @@ class UserUpdate(BaseModel):
     role: Optional[UserRole] = None
     role_id: Optional[int] = None
     is_active: Optional[bool] = None
-    password: Optional[str] = None
+    password: Optional[str] = Field(default=None, min_length=8)
 
 
 class UserResponse(UserBase):

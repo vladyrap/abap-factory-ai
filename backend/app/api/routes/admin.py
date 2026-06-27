@@ -22,6 +22,7 @@ def update_user(user_id: int, data: UserUpdate, db: Session = Depends(get_db)):
     payload = data.model_dump(exclude_none=True)
     if "password" in payload:
         user.password_hash = get_password_hash(payload.pop("password"))
+        user.token_version = (user.token_version or 1) + 1  # invalida sesiones previas
     for k, v in payload.items():
         setattr(user, k, v)
     db.commit()

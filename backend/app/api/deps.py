@@ -23,6 +23,11 @@ def get_current_user(
     user = db.query(User).filter(User.id == payload.get("sub")).first()
     if not user or not user.is_active:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Usuario no encontrado")
+    # Invalidación de sesiones: el tv del token debe coincidir con el del usuario.
+    # (tokens legados sin 'tv' se aceptan hasta que expiren)
+    tv = payload.get("tv")
+    if tv is not None and tv != (user.token_version or 1):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Sesión expirada")
     return user
 
 

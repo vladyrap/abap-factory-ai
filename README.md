@@ -7,10 +7,16 @@ Plataforma web para **generar, analizar, corregir, documentar y probar código A
 - **IA conmutable**: capa de abstracción que soporta **Claude (Anthropic)**, **OpenAI** y
   **Google Gemini** (con **capa gratuita** en AI Studio), elegible por agente. Claves por variables de entorno.
 
-### Probar gratis con Gemini
+### Cargar las API keys desde la web (recomendado)
+El administrador entra a **Credenciales IA** y pega las keys de Claude / OpenAI / Gemini con
+**paso a paso** incluido para obtener cada una. Se guardan **cifradas en BD** (Fernet desde
+`SECRET_KEY`), tienen prioridad sobre las variables de entorno y nunca se muestran completas
+(solo enmascaradas). Botón "Probar" verifica la clave con una mini llamada real.
+
+### Probar gratis con Gemini (alternativa por env)
 1. Crea una API key gratis en https://aistudio.google.com/apikey
-2. En `backend/.env`: `GEMINI_API_KEY=tu_key` y `DEFAULT_AI_PROVIDER=gemini`
-3. Reinicia el backend. `/health` mostrará `gemini: true`.
+2. Cárgala en **Credenciales IA** (web) o en `backend/.env` (`GEMINI_API_KEY=...`).
+3. `/health` mostrará `gemini: true`.
 
 ### Desarrollo local sin Docker (SQLite)
 En `backend/.env`: `DATABASE_URL_OVERRIDE=sqlite:///./dev.db` y listo (no necesitas Postgres).

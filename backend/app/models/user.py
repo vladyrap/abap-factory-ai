@@ -29,5 +29,9 @@ class User(Base):
     totp_secret = Column(String(64))
     totp_enabled = Column(Boolean, default=False)
 
+    # Versión de token: al incrementarla, todos los tokens emitidos antes dejan de valer
+    # (cambio de contraseña / "cerrar todas las sesiones").
+    token_version = Column(Integer, default=1)
+
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

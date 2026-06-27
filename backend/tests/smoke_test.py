@@ -37,9 +37,12 @@ def override_db():
 
 app.dependency_overrides[get_db] = override_db
 
-# La auditoría abre su propia sesión (engine real en prod). En el test la apuntamos al SQLite.
+# La auditoría y las credenciales abren su propia sesión (engine real en prod).
+# En el test las apuntamos al SQLite de prueba.
 import app.services.audit as _audit_mod
 _audit_mod.SessionLocal = TestingSession
+import app.services.ai.credentials as _cred_mod
+_cred_mod.SessionLocal = TestingSession
 
 # Seed mínimo: admin + consultor + qa
 seed = TestingSession()
@@ -309,6 +312,35 @@ import io as _io2
 fr = c.post("/api/solution/extract-file", headers=cons_h,
             files={"file": ("spec.txt", _io2.BytesIO(b"Necesito un fix en ZCL_X"), "text/plain")})
 check("extract-file .txt 200", fr.status_code == 200 and "ZCL_X" in fr.json()["text"])
+
+print("\n== Robustez: política de contraseña + sesiones ==")
+check("password corta => 422", c.post("/api/auth/users", headers=admin_h, json={"email": "sp@x.io", "password": "short", "first_name": "S", "last_name": "P"}).status_code == 422)
+c.post("/api/auth/users", headers=admin_h, json={"email": "sess@x.io", "password": "pass1234", "first_name": "S", "last_name": "S"})
+sess_tok = c.post("/api/auth/login", json={"email": "sess@x.io", "password": "pass1234"}).json()["access_token"]
+sess_h = {"Authorization": f"Bearer {sess_tok}"}
+check("token válido antes de logout-all", c.get("/api/auth/me", headers=sess_h).status_code == 200)
+check("logout-all 200", c.post("/api/auth/logout-all", headers=sess_h).status_code == 200)
+check("token viejo invalidado tras logout-all (401)", c.get("/api/auth/me", headers=sess_h).status_code == 401)
+
+print("\n== Robustez: espera de BD ==")
+from app.core.db_wait import wait_for_db
+from sqlalchemy import create_engine as _ce
+check("wait_for_db conecta", wait_for_db(_ce("sqlite://"), retries=2, delay=0.1) is True)
+
+print("\n== Credenciales IA por web (cifradas) ==")
+check("consultor SIN agents.manage => 403", c.get("/api/admin/ai-settings/", headers=cons_h).status_code == 403)
+st = c.get("/api/admin/ai-settings/", headers=admin_h)
+check("estado IA: 3 proveedores + guía", st.status_code == 200 and len(st.json()["providers"]) == 3 and all(p["steps"] for p in st.json()["providers"]))
+check("test sin clave => 400", c.post("/api/admin/ai-settings/test/openai", headers=admin_h).status_code == 400)
+c.put("/api/admin/ai-settings/", headers=admin_h, json={"gemini_api_key": "AIzaTESTKEY1234567890"})
+st2 = c.get("/api/admin/ai-settings/", headers=admin_h).json()
+gem = next(p for p in st2["providers"] if p["key"] == "gemini")
+check("gemini configurado tras guardar", gem["configured"] is True and gem["source"] == "bd")
+check("clave enmascarada (no expone el valor)", gem["masked"].endswith("7890") and "AIza" not in gem["masked"])
+from app.services.ai import credentials as _cred
+check("get_key descifra correctamente", _cred.get_key("gemini") == "AIzaTESTKEY1234567890")
+c.put("/api/admin/ai-settings/", headers=admin_h, json={"gemini_api_key": ""})  # limpiar para no afectar otros checks
+check("clave limpiada", c.get("/api/admin/ai-settings/", headers=admin_h).json()["providers"][0] is not None and not _cred.get_key("gemini"))
 
 print(f"\n==== RESULTADO: {PASS} PASS / {FAIL} FAIL ====")
 raise SystemExit(1 if FAIL else 0)
